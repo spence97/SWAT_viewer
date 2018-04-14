@@ -1,0 +1,18 @@
+#app-content-wrapper #app-content{
+    height: 100%;
+    /*padding-top: 60px;*/
+    /*padding-bottom: 50px;*/
+}
+
+#app-actions {
+    display: none;
+}
+
+#app-navigation {
+    width: 0%;
+}
+
+#view-file-loading {
+  display: flex;
+  justify-content: center;
+}
