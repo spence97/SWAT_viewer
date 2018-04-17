@@ -116,18 +116,18 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     init_map = function() {
         var projection = ol.proj.get('EPSG:4326');
-//        var baseLayer = new ol.layer.Tile({
-//            source: new ol.source.BingMaps({
-//                key: '5TC0yID7CYaqv3nVQLKe~xWVt4aXWMJq2Ed72cO4xsA~ApdeyQwHyH_btMjQS1NJ7OHKY8BK-W-EMQMrIavoQUMYXeZIQOUURnKGBOC7UCt4',
-//                imagerySet: 'Road' // Options 'Aerial', 'AerialWithLabels', 'Road'
-//            })
-//        });
-
         var baseLayer = new ol.layer.Tile({
-            source: new ol.source.Stamen({
-                layer: 'terrain-background'
-            }),
-        })
+            source: new ol.source.BingMaps({
+                key: '5TC0yID7CYaqv3nVQLKe~xWVt4aXWMJq2Ed72cO4xsA~ApdeyQwHyH_btMjQS1NJ7OHKY8BK-W-EMQMrIavoQUMYXeZIQOUURnKGBOC7UCt4',
+                imagerySet: 'Road' // Options 'Aerial', 'AerialWithLabels', 'Road'
+            })
+        });
+
+//        var baseLayer = new ol.layer.Tile({
+//            source: new ol.source.Stamen({
+//                layer: 'terrain-background'
+//            }),
+//        })
 
 //        var baseLayer = new ol.layer.Tile({
 //            source: new ol.source.TileJSON({
@@ -136,11 +136,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 //            }),
 //        })
 
-        var refLayer = new ol.layer.Tile({
-            source: new ol.source.Stamen({
-                layer: 'terrain-labels'
-            })
-        })
+
 
         featureOverlayStream = new ol.layer.Vector({
             source: new ol.source.Vector()
@@ -161,7 +157,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             source: wms_source
         });
 
-        layers = [baseLayer, featureOverlayStream, featureOverlaySubbasin, refLayer];
+        layers = [baseLayer, featureOverlayStream, featureOverlaySubbasin];
 
         map = new ol.Map({
             target: document.getElementById("map"),
@@ -183,7 +179,8 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     };
 
-    get_time_series = function(start, end, parameter, streamID) {
+    get_time_series = function(start, end, parameters, streamID) {
+        console.log(parameters)
 
         $.ajax({
             type: 'POST',
@@ -191,7 +188,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             data: {
                 'startDate': start,
                 'endDate': end,
-                'parameter': parameter,
+                'parameters': parameters,
                 'streamID': streamID
             },
             error: function () {
@@ -210,70 +207,80 @@ function ajax_update_database(ajax_url, ajax_data) {
                     $('#download_data').removeClass('hidden');
 
                 }
-                var values = data.Values
-                var dates = data.Dates
-                var variable = data.Variable
-                var reachId = data.ReachID
+                if (parameters.length == 1) {
+                    var values = data.Values0
+                    var dates = data.Dates
+                    var parameter = data.Parameter0
+                    var reachId = data.ReachID
 
-                Highcharts.chart('container', {
-                    chart: {
-                        zoomType: 'x'
-                    },
-                    title: {
-                        text: variable + " at reach " + reachId
-                    },
-                    subtitle: {
-                        text: document.ontouchstart === undefined ?
-                            'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
-                    },
-                    xAxis: {
-                        type: 'datetime',
-                        startonTick: true
-                    },
-                    yAxis: {
-                        title: {
-                            text: variable
+                    Highcharts.chart('container', {
+                        chart: {
+                            type: 'line',
+                            zoomType: 'x'
                         },
-                        min: 0,
-                        minPadding: 0,
-                        startOnTick: true
-                    },
-                    legend: {
-                        enabled: false
-                    },
-                    plotOptions: {
-                        area: {
-                            fillColor: {
-                                linearGradient: {
-                                    x1: 0,
-                                    y1: 0,
-                                    x2: 0,
-                                    y2: 1
+                        title: {
+                            text: parameters + " at reach " + reachId
+                        },
+                        subtitle: {
+                            text: document.ontouchstart === undefined ?
+                                'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+                        },
+                        xAxis: {
+                            type: 'datetime',
+                            startonTick: true
+                        },
+                        yAxis: {
+                            title: {
+                                text: parameter
+                            },
+                            min: 0,
+                            minPadding: 0,
+                            startOnTick: true
+                        },
+                        legend: {
+                            enabled: true
+                        },
+                        plotOptions: {
+                            area: {
+                                fillColor: {
+                                    linearGradient: {
+                                        x1: 0,
+                                        y1: 0,
+                                        x2: 0,
+                                        y2: 1
+                                    },
+                                    stops: [
+                                        [0, '#197ccc'],
+                                        [1, Highcharts.Color('#197ccc').setOpacity(0).get('rgba')]
+                                    ]
                                 },
-                                stops: [
-                                    [0, '#197ccc'],
-                                    [1, Highcharts.Color('#197ccc').setOpacity(0).get('rgba')]
-                                ]
-                            },
-                            marker: {
-                                radius: 1
-                            },
-                            lineWidth: 1,
-                            states: {
-                                hover: {
-                                    lineWidth: 1
-                                }
-                            },
-                            threshold: null
-                        }
-                    },
+                                marker: {
+                                    radius: 1
+                                },
+                                lineWidth: 1,
+                                states: {
+                                    hover: {
+                                        lineWidth: 1
+                                    }
+                                },
+                                threshold: null
+                            }
+                        },
 
-                    series: [{
-                        type: 'area',
-                        name: variable,
-                        data: values
-                    }]
-                });
+                        series: [{
+                            type: 'area',
+                            name: parameter,
+                            data: values
+                        }]
+                    });
+                } else {
+                    var values0 = data.Values0
+                    var values1 = data.Values1
+                    var dates = data.Dates
+                    var parameter0 = data.Parameter0
+                    var parameter1 = data.Parameter1
+                    var reachId = data.ReachID
+                }
             }
 
         });
@@ -311,7 +318,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                 if ((parameter === '') || (start === 'Select Start Date') || (end === 'Select End Date')) {
                     map.addLayer(featureOverlaySubbasin);
                     map.addLayer(featureOverlayStream);
-                    window.alert("Please be sure to select a parameter, start date, and end date before selecting a stream")
+                    window.alert("Please be sure to select a parameter, start date, and end date before selecting a stream.")
                 } else {
                     $('#container').addClass('hidden')
                     $('#download_data').addClass('hidden');
@@ -333,15 +340,18 @@ function ajax_update_database(ajax_url, ajax_data) {
                             url: wms_url,
                             dataType: 'json',
                             success: function (result) {
-                               console.log(result)
+                               var parameters = [];
                                var streamID = parseFloat(result["features"][0]["properties"]["Subbasin"]);
                                var start = $('#start_pick').val();
                                var end = $('#end_pick').val();
-                               var parameter = $('#param_select option:selected').val();
+                               $('#param_select option:selected').each(function() {
+                                    parameters.push( $( this ).val());
+                               });
+                               console.log(parameters)
 
                                var streamVectorSource = new ol.source.Vector({
                                     format: new ol.format.GeoJSON(),
-                                    url: 'http://tethys-staging.byu.edu:8181/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:reach&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                    url: 'http://localhost:8080/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:reach&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
                                     strategy: ol.loadingstrategy.bbox
                                });
 
@@ -357,7 +367,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                var subbasinVectorSource = new ol.source.Vector({
                                     format: new ol.format.GeoJSON(),
-                                    url: 'http://tethys-staging.byu.edu:8181/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:subbasin&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                    url: 'http://localhost:8080/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:subbasin&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
                                     strategy: ol.loadingstrategy.bbox
                                });
                                var color = '#0dd8c0';
@@ -379,7 +389,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                map.addLayer(featureOverlaySubbasin);
                                map.addLayer(featureOverlayStream);
-                               get_time_series(start, end, parameter, streamID);
+                               get_time_series(start, end, parameters, streamID);
     //
     //                           return(result);
                             },
@@ -504,7 +514,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 
         wms_source = new ol.source.ImageWMS({
-            url: 'http://tethys-staging.byu.edu:8181/geoserver/wms',
+            url: 'http://localhost:8080/geoserver/wms',
             params: {'LAYERS':'swat_mekong:reach','SLD_BODY':sld_string},
             serverType: 'geoserver',
             crossOrigin: 'Anonymous'

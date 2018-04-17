@@ -3,10 +3,7 @@ from django.contrib.auth.decorators import login_required
 from tethys_sdk.gizmos import *
 from django.http import JsonResponse
 from .rch_data_controller import extract_rch
-import plotly
-import plotly.graph_objs as go
-import pandas as pd
-
+from .model import write_csv
 
 @login_required()
 def home(request):
@@ -37,15 +34,16 @@ def home(request):
                           )
 
     param_select = SelectInput(name='param_select',
-                               multiple=False,
+                               multiple=True,
                                original=False,
-                               options=[('Select Parameter',''),('Stream Inflow (cms)', 'FLOW_INcms'),
+                               options=[('Stream Inflow (cms)', 'FLOW_INcms'),
                                         ('Stream Outflow (cms)', 'FLOW_OUTcms'),('Evaporation (cms)', 'EVAPcms'),
                                         ('Sediment Inflow (tons)', 'SED_INtons'), ('Sediment Outflow (tons)', 'SED_OUTtons'),
                                         ('Sediment Concentration (mg/kg)', 'SEDCONCmg/kg'), ('Nitrogen Inflow (kg)', 'ORGN_INkg'),
                                         ('Nitrogen Outflow (kg)', 'ORGN_OUTkg'), ('Phosphorus Inflow (kg)', 'ORGP_INkg'),
                                         ('Phosphorus Outflow (kg)', 'ORGP_OUTkg'), ('Dissolved Oxygen Inflow (kg)', 'DISOX_INkg')],
-                               initial=['Select Parameter to View']
+                               select2_options={'placeholder': 'Select a Parameter to View',
+                                                'allowClear': False},
                                )
 
     # view_options = MVView(
@@ -99,12 +97,6 @@ def home(request):
     # )
 
 
-    x = ['Jan 14', 'Feb 14', 'Mar 14', 'Apr 14', 'May 14', 'Jun 14', 'Jul 14', 'Aug 14', 'Sep 14', 'Oct 14', 'Nov 14', 'Dec 14', 'Jan 15', 'Feb 15', 'Mar 15', 'Apr 15', 'May 15', 'Jun 15', 'Jul 15', 'Aug 15', 'Sep 15', 'Oct 15', 'Nov 15']
-    y = [0.0, 0.0, 0.0, 0.0, 0.0, 40600.0, 183100.0, 32280.0, 31450.0, 2650.0, 0.3825, 0.0, 0.0, 0.0, 0.0004499, 0.000472, 0.0, 6887.0, 473.5, 56390.0, 86400.0, 163700.0, 7943.0, 0.0]
-
-    data = [go.Scatter(x = x, y = y, name = 'NoData')]
-    swat_plot = PlotlyView(data)
-
 
     context = {
         'start_pick': start_pick,
@@ -120,18 +112,20 @@ def timeseries(request):
     Controller for the time-series plot.
     """
 
-    get_data = request.POST
-    print(get_data)
-
     start = request.POST.get('startDate')
     end = request.POST.get(str('endDate'))
-    parameter = request.POST.get('parameter')
+    parameters = request.POST.getlist('parameters[]')
     streamID = request.POST.get('streamID')
 
+    print(parameters)
 
-    timeseries_dict = extract_rch(start,end,parameter,streamID)
+    timeseries_dict = extract_rch(start,end,parameters,streamID)
+
+
+    # Dates = timeseries_dict['Dates']
+    # Values = timeseries_dict['Values1']
+
+    # write_csv(streamID, parameters[0], Dates, Values)
+
     json_dict = JsonResponse(timeseries_dict)
-
-    return(json_dict)
-
-
+    return (json_dict)

@@ -10,22 +10,11 @@ monthly_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_month
 daily_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_daily.rch')
 
 
-def extract_rch(start_date, end_date, var, reachid):
-    dir = '/Users/Student/Documents/NASA-Goddard/SWAT/Example Data'
-    f = open(monthly_rch_path)
+def extract_rch(start, end, parameters, reachid):
 
-    header1 = f.readline()
-    header2 = f.readline()
-    header3 = f.readline()
-    header4 = f.readline()
-    header5 = f.readline()
-    header6 = f.readline()
-    header7 = f.readline()
-    header8 = f.readline()
-    header9 = f.readline()
 
-    dt_start = datetime.strptime(start_date, '%B %Y')
-    dt_end = datetime.strptime(end_date, '%B %Y')
+    dt_start = datetime.strptime(start, '%B %Y')
+    dt_end = datetime.strptime(end, '%B %Y')
 
     year_start = dt_start.year
     month_start = dt_start.month
@@ -38,7 +27,7 @@ def extract_rch(start_date, end_date, var, reachid):
     start_index = start_year_index * 12 + month_start - 1
     end_index = end_year_index * 12 + month_end - 1
 
-    variables = ['', 'RCH', 'GIS', 'MON', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
+    param_vals = ['', 'RCH', 'GIS', 'MON', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
                  'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
                  'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
                  'NO3_OUTkg', 'NH4_INkg', 'NH4_OUTkg', 'NO2_INkg', 'NO2_OUTkg',
@@ -48,35 +37,56 @@ def extract_rch(start_date, end_date, var, reachid):
                  'RESUSP_PSTmg', 'DIFFUSEPSTmg', 'REACBEDPSTmg', 'BURYPSTmg', 'BED_PSTmg',
                  'BACTP_OUTct', 'BACTLP_OUTct', 'CMETAL']
 
-    var_names = ['', 'Reach', 'GIS', 'Month', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
+    param_names = ['', 'Reach', 'GIS', 'Month', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
                 'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
                 'Sediment Concentration (mg/kg)', 'Organic Nitrogen Inflow (kg)', 'Organic Nitrogen Outflow (kg)',
                 'Organic Phosphorus Inflow (kg)', 'Organic Phosphorus Outflow (kg)', 'Nitrate Inflow (kg)', 'Nitrate Outflow (kg)'
                 ]
 
-    var_index = variables.index(var)
-    var_name = var_names[var_index]
-    data = []
-    for num, line in enumerate(f,1):
-        line = line.strip()
-        columns = line.split()
-        if columns[1] == reachid and 1 <= float(columns[3]) <= 12:
-            data.append(float(columns[var_index]))
-
-
-    daterange = pd.date_range(start_date, end_date, freq='1M')
-    daterange = daterange.union([daterange[-1]+1])
+    daterange = pd.date_range(start, end, freq='1M')
+    daterange = daterange.union([daterange[-1] + 1])
     daterange_str = [d.strftime('%b %y') for d in daterange]
-    daterange_mil = [int(d.strftime('%s'))*1000 for d in daterange]
+    daterange_mil = [int(d.strftime('%s')) * 1000 for d in daterange]
 
-    ts = []
-    data = data[start_index:end_index + 1]
-    i = 0
-    while i < len(data):
-        ts.append([daterange_mil[i],data[i]])
-        i += 1
+    rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters}
+    print(parameters)
+    print(len(parameters))
+    for x in range(0,len(parameters)):
+        param_index = param_vals.index(parameters[x])
+        print(param_index)
+        param_name = param_names[param_index]
+        print(param_name)
+        data = []
+        f = open(monthly_rch_path)
 
-    rchDict = {'Values': ts, 'Dates':daterange_str, 'ReachID': reachid, 'Variable': var_name}
+        header1 = f.readline()
+        header2 = f.readline()
+        header3 = f.readline()
+        header4 = f.readline()
+        header5 = f.readline()
+        header6 = f.readline()
+        header7 = f.readline()
+        header8 = f.readline()
+        header9 = f.readline()
+
+        for num, line in enumerate(f,1):
+            line = line.strip()
+            columns = line.split()
+            if columns[1] == reachid and 1 <= float(columns[3]) <= 12:
+                data.append(float(columns[param_index]))
+
+        f.close()
+        ts = []
+        data = data[start_index:end_index + 1]
+        i = 0
+        while i < len(data):
+            ts.append([daterange_mil[i],data[i]])
+            i += 1
+
+
+        rchDict['Values' + str(x)] = ts
+
+    print(rchDict)
     return rchDict
 
 
