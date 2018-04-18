@@ -49,13 +49,9 @@ def extract_rch(start, end, parameters, reachid):
     daterange_mil = [int(d.strftime('%s')) * 1000 for d in daterange]
 
     rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters, 'Values':{}, 'Names': []}
-    print(parameters)
-    print(len(parameters))
     for x in range(0,len(parameters)):
         param_index = param_vals.index(parameters[x])
-        print(param_index)
         param_name = param_names[param_index]
-        print(param_name)
         data = []
         f = open(monthly_rch_path)
 
@@ -87,7 +83,6 @@ def extract_rch(start, end, parameters, reachid):
         rchDict['Values'][x] = ts
         rchDict['Names'].append(param_name)
 
-    print(rchDict)
     return rchDict
 
 

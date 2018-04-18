@@ -122,10 +122,10 @@ def timeseries(request):
     timeseries_dict = extract_rch(start,end,parameters,streamID)
 
 
-    # Dates = timeseries_dict['Dates']
-    # Values = timeseries_dict['Values1']
+    dates = timeseries_dict['Dates']
+    values = timeseries_dict['Values']
 
-    # write_csv(streamID, parameters[0], Dates, Values)
+    write_csv(streamID, parameters, dates, values)
 
     json_dict = JsonResponse(timeseries_dict)
     return (json_dict)

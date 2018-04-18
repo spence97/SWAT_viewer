@@ -314,7 +314,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                            offset: 0,
                            top: top[i],
                            height: plot_height_str,
-
+                           endOnTick: false
                         }
 
 
