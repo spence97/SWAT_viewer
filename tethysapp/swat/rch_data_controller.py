@@ -48,7 +48,7 @@ def extract_rch(start, end, parameters, reachid):
     daterange_str = [d.strftime('%b %y') for d in daterange]
     daterange_mil = [int(d.strftime('%s')) * 1000 for d in daterange]
 
-    rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters}
+    rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters, 'Values':{}, 'Names': []}
     print(parameters)
     print(len(parameters))
     for x in range(0,len(parameters)):
@@ -84,7 +84,8 @@ def extract_rch(start, end, parameters, reachid):
             i += 1
 
 
-        rchDict['Values' + str(x)] = ts
+        rchDict['Values'][x] = ts
+        rchDict['Names'].append(param_name)
 
     print(rchDict)
     return rchDict

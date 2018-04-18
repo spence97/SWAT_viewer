@@ -18,8 +18,7 @@
 <!--<script src="https://code.jquery.com/ui/3.3.1/jquery-ui.js"></script>-->
 <script src="https://openlayers.org/en/v4.3.1/build/ol.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.4/chroma.min.js"></script>
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
 {% endblock %}
 
 {% block header_buttons %}
@@ -99,7 +98,7 @@
         </div>
         <div class="modal-body">
           <div class="flex-container-row"><img id="view-file-loading" class="view-file hidden" src="/static/swat/images/loader.gif" style="margin: auto"/></div>
-          <div id="container" class="view_chart hidden" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+          <div id="container" class="view_chart hidden"></div>
           <br>
           <div id="download_data" class="btn-group hidden long-term-select" role="group">
             <a class="btn btn-success" role="button" id="submit-download-data" href="/swat/workspaces/app_workspace/download/swat_data.csv" download>

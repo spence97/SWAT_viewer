@@ -200,6 +200,15 @@ function ajax_update_database(ajax_url, ajax_data) {
                 }, 5000);
             },
             success: function (data) {
+                var values = data.Values
+                console.log(values)
+                var dates = data.Dates
+                var parameters = data.Parameters
+                console.log(parameters)
+                var names = data.Names
+                console.log(names)
+                var reachId = data.ReachID
+
 
                 if (!data.error) {
                     $loading.addClass('hidden');
@@ -208,10 +217,6 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                 }
                 if (parameters.length == 1) {
-                    var values = data.Values0
-                    var dates = data.Dates
-                    var parameter = data.Parameter0
-                    var reachId = data.ReachID
 
                     Highcharts.chart('container', {
                         chart: {
@@ -219,7 +224,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                             zoomType: 'x'
                         },
                         title: {
-                            text: parameters + " at reach " + reachId
+                            text: names[0] + " at reach " + reachId
                         },
                         subtitle: {
                             text: document.ontouchstart === undefined ?
@@ -231,7 +236,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                         },
                         yAxis: {
                             title: {
-                                text: parameter
+                                text: names[0]
                             },
                             min: 0,
                             minPadding: 0,
@@ -269,20 +274,93 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                         series: [{
                             type: 'area',
-                            name: parameter,
-                            data: values
+                            name: parameters[0],
+                            data: values[0]
                         }]
                     });
                 } else {
-                    var values0 = data.Values0
-                    var values1 = data.Values1
-                    var dates = data.Dates
-                    var parameter0 = data.Parameter0
-                    var parameter1 = data.Parameter1
-                    var reachId = data.ReachID
+                    var seriesOptions = []
+                    var seriesCounter = 0
+                    var yAxes = []
+                    var plot_height = 100/parameters.length - 15
+                    console.log(plot_height)
+                    var plot_height_str = plot_height + '%'
+                    var top = []
+                    console.log(plot_height_str)
+
+
+
+                    $.each( names, function( i, name ) {
+                        seriesOptions[i] = {
+                            type: 'area',
+                            name: name,
+                            data: values[i],
+                            yAxis: i
+                        };
+
+                        var plot_top = plot_height * i + 15 * i
+                        console.log(plot_top)
+                        top.push(plot_top +'%')
+                        console.log(top)
+
+                        yAxes[i] = {
+                           labels: {
+                                align: 'left',
+                                x: 0
+                           },
+                           title: {
+                              text: name
+                           },
+                           offset: 0,
+                           top: top[i],
+                           height: plot_height_str,
+
+                        }
+
+
+                        seriesCounter += 1;
+
+                        if (seriesCounter === names.length) {
+                            Highcharts.stockChart('container', {
+
+                                rangeSelector: {
+                                    enabled: false
+                                },
+
+                                title: {
+                                    text: 'SWAT Time-series Comparisons'
+                                },
+
+                                subtitle: {
+                                    text: names.toString().split(',').join(', ')
+                                },
+
+                                xAxis: {
+                                    type: 'datetime',
+                                    startonTick: true
+                                },
+
+                                yAxis: yAxes,
+
+
+                                plotOptions: {
+                                    series: {
+                                        showInNavigator: true
+                                    }
+                                },
+
+                                tooltip: {
+                                    pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b>',
+                                    valueDecimals: 1,
+                                    split: true
+                                },
+
+                                series: seriesOptions
+                            });
+                        }
+                    });
                 }
             }
-
         });
     };
 
