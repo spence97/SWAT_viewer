@@ -216,105 +216,105 @@ function ajax_update_database(ajax_url, ajax_data) {
                     $('#download_data').removeClass('hidden');
 
                 }
-                if (parameters.length == 1) {
-
-                    Highcharts.chart('container', {
-                        chart: {
-                            type: 'line',
-                            zoomType: 'x'
-                        },
-                        title: {
-                            text: names[0] + " at reach " + reachId
-                        },
-                        subtitle: {
-                            text: document.ontouchstart === undefined ?
-                                'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
-                        },
-                        xAxis: {
-                            type: 'datetime',
-                            startonTick: true
-                        },
-                        yAxis: {
-                            title: {
-                                text: names[0]
-                            },
-                            min: 0,
-                            minPadding: 0,
-                            startOnTick: true
-                        },
-                        legend: {
-                            enabled: true
-                        },
-                        plotOptions: {
-                            area: {
-                                fillColor: {
-                                    linearGradient: {
-                                        x1: 0,
-                                        y1: 0,
-                                        x2: 0,
-                                        y2: 1
-                                    },
-                                    stops: [
-                                        [0, '#197ccc'],
-                                        [1, Highcharts.Color('#197ccc').setOpacity(0).get('rgba')]
-                                    ]
-                                },
-                                marker: {
-                                    radius: 1
-                                },
-                                lineWidth: 1,
-                                states: {
-                                    hover: {
-                                        lineWidth: 1
-                                    }
-                                },
-                                threshold: null
-                            }
-                        },
-
-                        series: [{
-                            type: 'area',
-                            name: parameters[0],
-                            data: values[0]
-                        }]
-                    });
-                } else {
+//                if (parameters.length == 1) {
+//
+//                    Highcharts.chart('container', {
+//                        chart: {
+//                            type: 'line',
+//                            zoomType: 'x'
+//                        },
+//                        title: {
+//                            text: names[0] + " at reach " + reachId
+//                        },
+//                        subtitle: {
+//                            text: document.ontouchstart === undefined ?
+//                                'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+//                        },
+//                        xAxis: {
+//                            type: 'datetime',
+//                            startonTick: true
+//                        },
+//                        yAxis: {
+//                            title: {
+//                                text: names[0]
+//                            },
+//                            min: 0,
+//                            minPadding: 0,
+//                            startOnTick: true
+//                        },
+//                        legend: {
+//                            enabled: true
+//                        },
+//                        plotOptions: {
+//                            area: {
+//                                fillColor: {
+//                                    linearGradient: {
+//                                        x1: 0,
+//                                        y1: 0,
+//                                        x2: 0,
+//                                        y2: 1
+//                                    },
+//                                    stops: [
+//                                        [0, '#197ccc'],
+//                                        [1, Highcharts.Color('#197ccc').setOpacity(0).get('rgba')]
+//                                    ]
+//                                },
+//                                marker: {
+//                                    radius: 1
+//                                },
+//                                lineWidth: 1,
+//                                states: {
+//                                    hover: {
+//                                        lineWidth: 1
+//                                    }
+//                                },
+//                                threshold: null
+//                            }
+//                        },
+//
+//                        series: [{
+//                            type: 'area',
+//                            name: parameters[0],
+//                            data: values[0]
+//                        }]
+//                    });
+//                } else {
                     var seriesOptions = []
                     var seriesCounter = 0
                     var yAxes = []
-                    var plot_height = 100/parameters.length - 15
-                    console.log(plot_height)
+                    var plot_height = 100/parameters.length - 2
                     var plot_height_str = plot_height + '%'
                     var top = []
-                    console.log(plot_height_str)
-
-
+                    var colors = ['#002cce','#c10000', '#0e6d00', '#7400ce']
 
                     $.each( names, function( i, name ) {
                         seriesOptions[i] = {
                             type: 'area',
                             name: name,
                             data: values[i],
-                            yAxis: i
+                            yAxis: i,
+                            color: colors[i],
+                            lineWidth: 1
                         };
 
-                        var plot_top = plot_height * i + 15 * i
-                        console.log(plot_top)
+                        var plot_top = plot_height * i + 2 * i
                         top.push(plot_top +'%')
-                        console.log(top)
 
                         yAxes[i] = {
-                           labels: {
-                                align: 'left',
-                                x: 0
-                           },
-                           title: {
+                            labels: {
+                                align: 'right',
+                                x: -3
+                            },
+                            opposite: false,
+                            min: 0,
+                            title: {
                               text: name
-                           },
-                           offset: 0,
-                           top: top[i],
-                           height: plot_height_str,
-                           endOnTick: false
+                            },
+                            offset: 0,
+                            top: top[i],
+                            height: plot_height_str,
+                            lineWidth: 1,
+                            endOnTick: false
                         }
 
 
@@ -351,7 +351,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                 tooltip: {
                                     pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b>',
-                                    valueDecimals: 1,
+                                    valueDecimals: 2,
                                     split: true
                                 },
 
@@ -359,7 +359,6 @@ function ajax_update_database(ajax_url, ajax_data) {
                             });
                         }
                     });
-                }
             }
         });
     };
