@@ -124,18 +124,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             })
         });
 
-//        var baseLayer = new ol.layer.Tile({
-//            source: new ol.source.Stamen({
-//                layer: 'terrain-background'
-//            }),
-//        })
 
-//        var baseLayer = new ol.layer.Tile({
-//            source: new ol.source.TileJSON({
-//                url: 'https://api.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy.json?secure',
-//                crossOrigin: 'anonymous'
-//            }),
-//        })
 
 
 
@@ -332,6 +321,16 @@ function ajax_update_database(ajax_url, ajax_data) {
     };
 
     init_events = function(){
+        var options = {
+                format: 'MM yyyy',
+                startDate: 'January 2005',
+                endDate: 'December 2015',
+                startView: 'decade',
+                minViewMode: 'months',
+            }
+        $('.input-daterange input').each(function() {
+            $(this).datepicker(options);
+        });
         (function () {
             var target, observer, config;
             // select the target node
@@ -357,12 +356,13 @@ function ajax_update_database(ajax_url, ajax_data) {
             var end = $('#end_pick').val();
             console.log(start)
             var parameter = $('#param_select option:selected').val();
+            console.log(parameter)
             map.removeLayer(featureOverlayStream);
             map.removeLayer(featureOverlaySubbasin);
 
 
             if (map.getTargetElement().style.cursor == "pointer") {
-                if ((parameter === '') || (start === 'Select Start Date') || (end === 'Select End Date')) {
+                if ((parameter === undefined) || (start === 'Select Start Date') || (end === 'Select End Date')) {
                     map.addLayer(featureOverlaySubbasin);
                     map.addLayer(featureOverlayStream);
                     window.alert("Please be sure to select a parameter, start date, and end date before selecting a stream.")
@@ -437,49 +437,12 @@ function ajax_update_database(ajax_url, ajax_data) {
                                map.addLayer(featureOverlaySubbasin);
                                map.addLayer(featureOverlayStream);
                                get_time_series(start, end, parameters, streamID);
-    //
-    //                           return(result);
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 console.log(Error);
                             }
                         }).done(function(value) {
-    //                        var streamID = parseFloat(value["features"][0]["properties"]["Subbasin"]);
-    //                        console.log(streamID);
-    //                        var parameter = $('#param_select option:selected').val();
-    //                        console.log(parameter);
-    //                        var start = $('#start_pick').val();
-    //                        console.log(start);
-    //                        var end = $('#end_pick').val();
-    //                        console.log(end);
 
-    //                        var popup_content = '<div class="stream-popup">' +
-    //                                      '<p><b>' + 'Stream ID: ' + streamID + '</b></p>' +
-    //                                      '<table class="table  table-condensed">' +
-    //                                      '</table>' +
-    //                                      '<div class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="View Plot">' +
-    //                                        '<a data-toggle="modal" data-target="#plot-modal"> View Time-Series </a>' +
-    //                                      '</div>' +
-    ////                                      '<a class="btn btn-success" data-target="#plot-modal">View Time-Series</a>' +
-    //                                      '</div>';
-    //
-    //                        // Clean up last popup and reinitialize
-    //                        $(element).popover('destroy');
-    //
-    //                        // Delay arbitrarily to wait for previous popover to
-    //                        // be deleted before showing new popover.
-    //                        setTimeout(function() {
-    //                            popup.setPosition(clickCoord);
-    //
-    //                            $(element).popover({
-    //                                'placement': 'top',
-    //                                'animation': true,
-    //                                'html': true,
-    //                                'content': popup_content
-    //                            });
-    //
-    //                              $(element).popover('show');
-    //                          }, 500);
                         });
                     }
                 }
@@ -501,45 +464,6 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     };
 
-
-
-
-//    add_basins = function(){
-//        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:subbasin</Name><UserStyle><FeatureTypeStyle><Rule>\
-//            <PolygonSymbolizer>\
-//            <Name>rule1</Name>\
-//            <Title>Watersheds</Title>\
-//            <Abstract></Abstract>\
-//            <Fill>\
-//              <CssParameter name="fill">#a9c5ce</CssParameter>\
-//              <CssParameter name="fill-opacity">0</CssParameter>\
-//            </Fill>\
-//            <Stroke>\
-//              <CssParameter name="stroke">#2d2c2c</CssParameter>\
-//              <CssParameter name="stroke-width">.5</CssParameter>\
-//            </Stroke>\
-//            </PolygonSymbolizer>\
-//            </Rule>\
-//            </FeatureTypeStyle>\
-//            </UserStyle>\
-//            </NamedLayer>\
-//            </StyledLayerDescriptor>';
-//
-//        wms_source = new ol.source.ImageWMS({
-//            url: 'http://localhost:8080/geoserver/wms',
-//            params: {'LAYERS':'swat_mekong:subbasin','SLD_BODY':sld_string},
-//            serverType: 'geoserver',
-//            crossOrigin: 'Anonymous'
-//        });
-//
-//        basin_layer = new ol.layer.Image({
-//            source: wms_source
-//        });
-//
-//
-//        map.addLayer(basin_layer);
-//
-//    }
 
     add_streams = function(){
         var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:reach</Name><UserStyle><FeatureTypeStyle><Rule>\
@@ -579,26 +503,52 @@ function ajax_update_database(ajax_url, ajax_data) {
     init_all = function(){
         init_map();
         init_events();
-//        add_basins();
         add_streams();
     };
 
-    update_dates = function(){
-        if ($(".toggle").hasClass( "off" )) {
-            $(".form-control").attr("data-date-start-date", "January 01, 2011")
-            $(".form-control").attr("data-date-end-date", "January 02, 2011")
-            $(".form-control").attr("data-date-format", "MM d, yyyy")
-            $(".form-control").attr("data-date-start-view", "year")
-            $(".form-control").attr("data-date-min-view-mode", "days")
+
+
+    update_dates = function() {
+        if($(".toggle").hasClass( "off")) {
+            var options = {
+                format: 'MM d, yyyy',
+                startDate: 'January 1, 2001',
+                endDate: 'January 2, 2011',
+                startView: 'month',
+                minViewMode: 'days',
+            }
+            $('.input-daterange input').each(function() {
+                $(this).datepicker('setDate', null)
+                $(this).datepicker('destroy');
+                console.log('monthly destroy')
+                $(this).datepicker(options);
+                console.log('daily create')
+            });
         } else {
-            $(".form-control").attr("data-date-start-date", "January 2005")
-            $(".form-control").attr("data-date-end-date", "December 2015")
-            $(".form-control").attr("data-date-format", "MM yyyy")
-            $(".form-control").attr("data-date-start-view", "decade")
-            $(".form-control").attr("data-date-min-view-mode", "months")
+            var options = {
+                format: 'MM yyyy',
+                startDate: 'January 2005',
+                endDate: 'December 2015',
+                startView: 'decade',
+                minViewMode: 'months',
+            }
+            $('.input-daterange input').each(function() {
+                $(this).datepicker('setDate', null)
+                $(this).datepicker('destroy');
+                console.log('daily destroy')
+                $(this).datepicker(options);
+                console.log('monthly create')
+            });
         }
+        $('#start_pick').attr('placeholder', 'Start Date')
+        $('#end_pick').attr('placeholder', 'End Date')
 
     }
+//
+
+
+
+
 
 
 
@@ -620,15 +570,13 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 $(function() {
         init_all();
-
-
-
+        console.log('rendering page');
+        $(".monthDayToggle").change(function(){
+            update_dates();
+        });
     });
 
-    $(".monthDayToggle").change(function(){
-        $("#datePickStart").load(' #start_pick');
-        $("#datePickEnd").load(' #end_pick');
-    }).change();
+
 
 
     return public_interface;
@@ -637,3 +585,142 @@ $(function() {
 }());// End of package wrapper
 // NOTE: that the call operator (open-closed parenthesis) is used to invoke the library wrapper
 // function immediately after being parsed.
+
+
+// Old code to reference
+
+
+//        var baseLayer = new ol.layer.Tile({
+//            source: new ol.source.Stamen({
+//                layer: 'terrain-background'
+//            }),
+//        })
+
+//        var baseLayer = new ol.layer.Tile({
+//            source: new ol.source.TileJSON({
+//                url: 'https://api.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy.json?secure',
+//                crossOrigin: 'anonymous'
+//            }),
+//        })
+
+//    add_basins = function(){
+//        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:subbasin</Name><UserStyle><FeatureTypeStyle><Rule>\
+//            <PolygonSymbolizer>\
+//            <Name>rule1</Name>\
+//            <Title>Watersheds</Title>\
+//            <Abstract></Abstract>\
+//            <Fill>\
+//              <CssParameter name="fill">#a9c5ce</CssParameter>\
+//              <CssParameter name="fill-opacity">0</CssParameter>\
+//            </Fill>\
+//            <Stroke>\
+//              <CssParameter name="stroke">#2d2c2c</CssParameter>\
+//              <CssParameter name="stroke-width">.5</CssParameter>\
+//            </Stroke>\
+//            </PolygonSymbolizer>\
+//            </Rule>\
+//            </FeatureTypeStyle>\
+//            </UserStyle>\
+//            </NamedLayer>\
+//            </StyledLayerDescriptor>';
+//
+//        wms_source = new ol.source.ImageWMS({
+//            url: 'http://localhost:8080/geoserver/wms',
+//            params: {'LAYERS':'swat_mekong:subbasin','SLD_BODY':sld_string},
+//            serverType: 'geoserver',
+//            crossOrigin: 'Anonymous'
+//        });
+//
+//        basin_layer = new ol.layer.Image({
+//            source: wms_source
+//        });
+//
+//
+//        map.addLayer(basin_layer);
+//
+//    }
+
+
+//    update_dates = function(){
+//        if ($(".toggle").hasClass( "off" )) {
+//            $("#datePickStart").load(' #start_pick');
+//            $("#datePickEnd").load(' #end_pick');
+//            $.ajax({
+//                type: 'GET',
+//                url: '/apps/swat/home/',
+//                data: {
+//                    'startDate': 'January 01, 2011',
+//                    'endDate': 'January 02, 2011',
+//                    'format': 'MM d, yyyy',
+//                    'startView': 'year',
+//                    'minView': 'days'
+//                },
+//            }).done(function() {
+//
+////                $(".form-control").attr("data-date-start-date", "January 01, 2011")
+////                $(".form-control").attr("data-date-end-date", "January 02, 2011")
+////                $(".form-control").attr("data-date-format", "MM d, yyyy")
+////                $(".form-control").attr("data-date-start-view", "year")
+////                $(".form-control").attr("data-date-min-view-mode", "days")
+//            })
+//        } else {
+////            $("#datePickStart").load(' #start_pick');
+////            $("#datePickEnd").load(' #end_pick');
+////            $.ajax({
+////                type: 'GET',
+////                url: '/apps/swat/home/',
+////                data: {
+////                    'startDate': 'January 2005',
+////                    'endDate': 'December 2015',
+////                    'format': 'MM yyyy',
+////                    'startView': 'decade',
+////                    'minView': 'months'
+////                },
+////            }).done(function(){
+//
+////                $(".form-control").attr("data-date-start-date", "January 2005")
+////                $(".form-control").attr("data-date-end-date", "December 2015")
+////                $(".form-control").attr("data-date-format", "MM yyyy")
+////                $(".form-control").attr("data-date-start-view", "decade")
+////                $(".form-control").attr("data-date-min-view-mode", "months")
+//            })
+//        }
+//    }
+
+
+    //                        var streamID = parseFloat(value["features"][0]["properties"]["Subbasin"]);
+    //                        console.log(streamID);
+    //                        var parameter = $('#param_select option:selected').val();
+    //                        console.log(parameter);
+    //                        var start = $('#start_pick').val();
+    //                        console.log(start);
+    //                        var end = $('#end_pick').val();
+    //                        console.log(end);
+
+    //                        var popup_content = '<div class="stream-popup">' +
+    //                                      '<p><b>' + 'Stream ID: ' + streamID + '</b></p>' +
+    //                                      '<table class="table  table-condensed">' +
+    //                                      '</table>' +
+    //                                      '<div class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="View Plot">' +
+    //                                        '<a data-toggle="modal" data-target="#plot-modal"> View Time-Series </a>' +
+    //                                      '</div>' +
+    ////                                      '<a class="btn btn-success" data-target="#plot-modal">View Time-Series</a>' +
+    //                                      '</div>';
+    //
+    //                        // Clean up last popup and reinitialize
+    //                        $(element).popover('destroy');
+    //
+    //                        // Delay arbitrarily to wait for previous popover to
+    //                        // be deleted before showing new popover.
+    //                        setTimeout(function() {
+    //                            popup.setPosition(clickCoord);
+    //
+    //                            $(element).popover({
+    //                                'placement': 'top',
+    //                                'animation': true,
+    //                                'html': true,
+    //                                'content': popup_content
+    //                            });
+    //
+    //                              $(element).popover('show');
+    //                          }, 500);

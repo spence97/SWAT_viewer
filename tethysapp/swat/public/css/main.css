@@ -31,6 +31,23 @@
     margin: auto;
 }
 
+#map{
+    width:100%;
+    height:100%;
+}
+.map-view-legend {
+    bottom: 85px;
+    right: 5px;
+    width: 170px;
+    max-height: 90%;
+    overflow-y: auto;
+    margin: 5px;
+    color:white;
+    background: #286090;
+    border: 1px #ddd solid;
+    z-index: 999;
+}
+
 .modal-body {
     width: 100%;
     border-radius: 0;
@@ -41,23 +58,37 @@
 }
 
 #paramSelect {
-    min-width: 180px;
-    margin-right: 15px;
-    margin-top: 12px
+    min-width: 100%;
+    margin-top: 12px;
 }
 
-#datePickStart {
-    min-width: 150px;
-    margin-right: 15px;
-
+.input-daterange {
+    margin-top: 15px;
 }
 
-#datePickEnd {
-    min-width: 150px;
-    margin-right: 15px;
 
+#start_pick{
+    font-size: 12px;
+    border-top-left-radius: 5px !important;
+    border-bottom-left-radius: 5px !important;
+}
+
+#end_pick{
+    font-size: 12px;
+    border-top-right-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
 }
 
 .monthDayToggle {
-    margin-right: 15px;
+    margin: auto;
 }
+
+#app-navigation {
+    padding: 7px;
+}
+
+#inner-app-content {
+    padding: 0
+}
+
+
