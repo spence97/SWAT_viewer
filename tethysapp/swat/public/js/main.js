@@ -43,6 +43,7 @@ var LIBRARY_OBJECT = (function() {
         init_events,
         init_all,
         get_time_series,
+        update_dates,
         init_map,
         getCookie
 
@@ -119,7 +120,7 @@ function ajax_update_database(ajax_url, ajax_data) {
         var baseLayer = new ol.layer.Tile({
             source: new ol.source.BingMaps({
                 key: '5TC0yID7CYaqv3nVQLKe~xWVt4aXWMJq2Ed72cO4xsA~ApdeyQwHyH_btMjQS1NJ7OHKY8BK-W-EMQMrIavoQUMYXeZIQOUURnKGBOC7UCt4',
-                imagerySet: 'Road' // Options 'Aerial', 'AerialWithLabels', 'Road'
+                imagerySet: 'AerialWithLabels' // Options 'Aerial', 'AerialWithLabels', 'Road'
             })
         });
 
@@ -180,8 +181,17 @@ function ajax_update_database(ajax_url, ajax_data) {
     };
 
     get_time_series = function(start, end, parameters, streamID) {
+        console.log(start)
+        console.log(end)
         console.log(parameters)
-
+        console.log(streamID)
+        var monthOrDay
+        if ($(".toggle").hasClass( "off" )) {
+            monthOrDay = 'Daily'
+        } else {
+            monthOrDay = 'Monthly'
+        }
+        console.log(monthOrDay)
         $.ajax({
             type: 'POST',
             url: '/apps/swat/timeseries/',
@@ -189,7 +199,8 @@ function ajax_update_database(ajax_url, ajax_data) {
                 'startDate': start,
                 'endDate': end,
                 'parameters': parameters,
-                'streamID': streamID
+                'streamID': streamID,
+                'monthOrDay': monthOrDay
             },
             error: function () {
                 $('#info').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the forecast</strong></p>');
@@ -201,91 +212,42 @@ function ajax_update_database(ajax_url, ajax_data) {
             },
             success: function (data) {
                 var values = data.Values
-                console.log(values)
                 var dates = data.Dates
                 var parameters = data.Parameters
-                console.log(parameters)
                 var names = data.Names
-                console.log(names)
                 var reachId = data.ReachID
 
 
                 if (!data.error) {
                     $loading.addClass('hidden');
                     $('#container').removeClass('hidden');
-                    $('#download_data').removeClass('hidden');
+                    $('#download_csv').removeClass('hidden');
+                    $('#download_ascii').removeClass('hidden');
 
                 }
-//                if (parameters.length == 1) {
-//
-//                    Highcharts.chart('container', {
-//                        chart: {
-//                            type: 'line',
-//                            zoomType: 'x'
-//                        },
-//                        title: {
-//                            text: names[0] + " at reach " + reachId
-//                        },
-//                        subtitle: {
-//                            text: document.ontouchstart === undefined ?
-//                                'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
-//                        },
-//                        xAxis: {
-//                            type: 'datetime',
-//                            startonTick: true
-//                        },
-//                        yAxis: {
-//                            title: {
-//                                text: names[0]
-//                            },
-//                            min: 0,
-//                            minPadding: 0,
-//                            startOnTick: true
-//                        },
-//                        legend: {
-//                            enabled: true
-//                        },
-//                        plotOptions: {
-//                            area: {
-//                                fillColor: {
-//                                    linearGradient: {
-//                                        x1: 0,
-//                                        y1: 0,
-//                                        x2: 0,
-//                                        y2: 1
-//                                    },
-//                                    stops: [
-//                                        [0, '#197ccc'],
-//                                        [1, Highcharts.Color('#197ccc').setOpacity(0).get('rgba')]
-//                                    ]
-//                                },
-//                                marker: {
-//                                    radius: 1
-//                                },
-//                                lineWidth: 1,
-//                                states: {
-//                                    hover: {
-//                                        lineWidth: 1
-//                                    }
-//                                },
-//                                threshold: null
-//                            }
-//                        },
-//
-//                        series: [{
-//                            type: 'area',
-//                            name: parameters[0],
-//                            data: values[0]
-//                        }]
-//                    });
-//                } else {
+                    var plot_title
+                    var plot_subtitle
+                    if (parameters.length == 1) {
+                        plot_title = 'SWAT Output Data'
+                        plot_subtitle = 'ReachID: ' + reachId + ', Parameter: ' + names[0]
+                    } else {
+                        plot_title = 'SWAT Output Data Comparisons'
+                        plot_subtitle = 'ReachID: ' + reachId + ', Parameters: ' + names.toString().split(',').join(', ')
+                    }
+
                     var seriesOptions = []
                     var seriesCounter = 0
-                    var yAxes = []
                     var plot_height = 100/parameters.length - 2
                     var plot_height_str = plot_height + '%'
                     var top = []
+                    var yAxes = []
                     var colors = ['#002cce','#c10000', '#0e6d00', '#7400ce']
+                    var data_tag
+                    if (monthOrDay == 'Monthly') {
+                       data_tag = '{point.y:,.0f}'
+                    } else {
+                       data_tag = '{point.y:,.6f}'
+                    }
 
                     $.each( names, function( i, name ) {
                         seriesOptions[i] = {
@@ -314,13 +276,19 @@ function ajax_update_database(ajax_url, ajax_data) {
                             top: top[i],
                             height: plot_height_str,
                             lineWidth: 1,
-                            endOnTick: false
+                            endOnTick: false,
+                            gridLineWidth: 0
                         }
 
 
                         seriesCounter += 1;
 
                         if (seriesCounter === names.length) {
+                            Highcharts.setOptions({
+                                lang: {
+                                    thousandsSep: ','
+                                }
+                            });
                             Highcharts.stockChart('container', {
 
                                 rangeSelector: {
@@ -328,11 +296,11 @@ function ajax_update_database(ajax_url, ajax_data) {
                                 },
 
                                 title: {
-                                    text: 'SWAT Time-series Comparisons'
+                                    text: plot_title
                                 },
 
                                 subtitle: {
-                                    text: names.toString().split(',').join(', ')
+                                    text: plot_subtitle
                                 },
 
                                 xAxis: {
@@ -350,8 +318,8 @@ function ajax_update_database(ajax_url, ajax_data) {
                                 },
 
                                 tooltip: {
-                                    pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b>',
-                                    valueDecimals: 2,
+                                    pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>' + data_tag + '</b>',
+                                    valueDecimals: 2 ,
                                     split: true
                                 },
 
@@ -385,7 +353,9 @@ function ajax_update_database(ajax_url, ajax_data) {
 
         map.on("singleclick",function(evt){
             var start = $('#start_pick').val();
+            console.log(start)
             var end = $('#end_pick').val();
+            console.log(start)
             var parameter = $('#param_select option:selected').val();
             map.removeLayer(featureOverlayStream);
             map.removeLayer(featureOverlaySubbasin);
@@ -398,7 +368,8 @@ function ajax_update_database(ajax_url, ajax_data) {
                     window.alert("Please be sure to select a parameter, start date, and end date before selecting a stream.")
                 } else {
                     $('#container').addClass('hidden')
-                    $('#download_data').addClass('hidden');
+                    $('#download_csv').addClass('hidden');
+                    $('#download_ascii').addClass('hidden');
 
                     $loading = $('#view-file-loading');
                     $loading.removeClass('hidden');
@@ -424,11 +395,10 @@ function ajax_update_database(ajax_url, ajax_data) {
                                $('#param_select option:selected').each(function() {
                                     parameters.push( $( this ).val());
                                });
-                               console.log(parameters)
 
                                var streamVectorSource = new ol.source.Vector({
                                     format: new ol.format.GeoJSON(),
-                                    url: 'http://localhost:8080/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:reach&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                    url: 'http://tethys-staging.byu.edu:8181/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:reach&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
                                     strategy: ol.loadingstrategy.bbox
                                });
 
@@ -444,7 +414,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                var subbasinVectorSource = new ol.source.Vector({
                                     format: new ol.format.GeoJSON(),
-                                    url: 'http://localhost:8080/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:subbasin&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                    url: 'http://tethys-staging.byu.edu:8181/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:subbasin&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
                                     strategy: ol.loadingstrategy.bbox
                                });
                                var color = '#0dd8c0';
@@ -578,7 +548,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             <Abstract>A solid blue line with a 2 pixel width</Abstract>\
             <LineSymbolizer>\
                 <Stroke>\
-                    <CssParameter name="stroke">#005fea</CssParameter>\
+                    <CssParameter name="stroke">#418ff4</CssParameter>\
                     <CssParameter name="stroke-width">2</CssParameter>\
                 </Stroke>\
             </LineSymbolizer>\
@@ -591,7 +561,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 
         wms_source = new ol.source.ImageWMS({
-            url: 'http://localhost:8080/geoserver/wms',
+            url: 'http://tethys-staging.byu.edu:8181/geoserver/wms',
             params: {'LAYERS':'swat_mekong:reach','SLD_BODY':sld_string},
             serverType: 'geoserver',
             crossOrigin: 'Anonymous'
@@ -613,9 +583,24 @@ function ajax_update_database(ajax_url, ajax_data) {
         add_streams();
     };
 
-    function get_time_series(streadId, param, startDate, endDate) {
+    update_dates = function(){
+        if ($(".toggle").hasClass( "off" )) {
+            $(".form-control").attr("data-date-start-date", "January 01, 2011")
+            $(".form-control").attr("data-date-end-date", "January 02, 2011")
+            $(".form-control").attr("data-date-format", "MM d, yyyy")
+            $(".form-control").attr("data-date-start-view", "year")
+            $(".form-control").attr("data-date-min-view-mode", "days")
+        } else {
+            $(".form-control").attr("data-date-start-date", "January 2005")
+            $(".form-control").attr("data-date-end-date", "December 2015")
+            $(".form-control").attr("data-date-format", "MM yyyy")
+            $(".form-control").attr("data-date-start-view", "decade")
+            $(".form-control").attr("data-date-min-view-mode", "months")
+        }
 
     }
+
+
 
 
     /************************************************************************
@@ -637,7 +622,14 @@ $(function() {
         init_all();
 
 
+
     });
+
+    $(".monthDayToggle").change(function(){
+        $("#datePickStart").load(' #start_pick');
+        $("#datePickEnd").load(' #end_pick');
+    }).change();
+
 
     return public_interface;
 

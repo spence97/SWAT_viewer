@@ -10,9 +10,23 @@ monthly_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_month
 daily_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_daily.rch')
 
 
-def extract_rch(start, end, parameters, reachid):
+def extract_monthly_rch(start, end, parameters, reachid):
+    param_vals = ['', 'RCH', 'GIS', 'MON', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
+                  'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
+                  'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
+                  'NO3_OUTkg', 'NH4_INkg', 'NH4_OUTkg', 'NO2_INkg', 'NO2_OUTkg',
+                  'MINP_INkg', 'MINP_OUTkg', 'CHLA_INkg', 'CHLA_OUTkg', 'CBOD_INkg',
+                  'CBOD_OUTkg', 'DISOX_INkg', 'DISOX_OUTkg', 'SOLPST_INmg', 'SOLPST_OUTmg',
+                  'SORPST_INmg', 'SORPST_OUTmg', 'REACTPSTmg', 'VOLPSTmg', 'SETTLPSTmg',
+                  'RESUSP_PSTmg', 'DIFFUSEPSTmg', 'REACBEDPSTmg', 'BURYPSTmg', 'BED_PSTmg',
+                  'BACTP_OUTct', 'BACTLP_OUTct', 'CMETAL']
 
-
+    param_names = ['', 'Reach', 'GIS', 'Month', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
+                   'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
+                   'Sediment Concentration (mg/kg)', 'Organic Nitrogen Inflow (kg)', 'Organic Nitrogen Outflow (kg)',
+                   'Organic Phosphorus Inflow (kg)', 'Organic Phosphorus Outflow (kg)', 'Nitrate Inflow (kg)',
+                   'Nitrate Outflow (kg)'
+                   ]
     dt_start = datetime.strptime(start, '%B %Y')
     dt_end = datetime.strptime(end, '%B %Y')
 
@@ -27,28 +41,12 @@ def extract_rch(start, end, parameters, reachid):
     start_index = start_year_index * 12 + month_start - 1
     end_index = end_year_index * 12 + month_end - 1
 
-    param_vals = ['', 'RCH', 'GIS', 'MON', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
-                 'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
-                 'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
-                 'NO3_OUTkg', 'NH4_INkg', 'NH4_OUTkg', 'NO2_INkg', 'NO2_OUTkg',
-                 'MINP_INkg', 'MINP_OUTkg', 'CHLA_INkg', 'CHLA_OUTkg', 'CBOD_INkg',
-                 'CBOD_OUTkg', 'DISOX_INkg', 'DISOX_OUTkg', 'SOLPST_INmg', 'SOLPST_OUTmg',
-                 'SORPST_INmg', 'SORPST_OUTmg', 'REACTPSTmg', 'VOLPSTmg', 'SETTLPSTmg',
-                 'RESUSP_PSTmg', 'DIFFUSEPSTmg', 'REACBEDPSTmg', 'BURYPSTmg', 'BED_PSTmg',
-                 'BACTP_OUTct', 'BACTLP_OUTct', 'CMETAL']
-
-    param_names = ['', 'Reach', 'GIS', 'Month', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
-                'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
-                'Sediment Concentration (mg/kg)', 'Organic Nitrogen Inflow (kg)', 'Organic Nitrogen Outflow (kg)',
-                'Organic Phosphorus Inflow (kg)', 'Organic Phosphorus Outflow (kg)', 'Nitrate Inflow (kg)', 'Nitrate Outflow (kg)'
-                ]
-
     daterange = pd.date_range(start, end, freq='1M')
     daterange = daterange.union([daterange[-1] + 1])
     daterange_str = [d.strftime('%b %y') for d in daterange]
     daterange_mil = [int(d.strftime('%s')) * 1000 for d in daterange]
 
-    rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters, 'Values':{}, 'Names': []}
+    rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters, 'Values':{}, 'Names': [], 'Timestep': 'Monthly'}
     for x in range(0,len(parameters)):
         param_index = param_vals.index(parameters[x])
         param_name = param_names[param_index]
@@ -86,8 +84,80 @@ def extract_rch(start, end, parameters, reachid):
     return rchDict
 
 
+def extract_daily_rch(start, end, parameters, reachid):
+    param_vals = ['', 'RCH', 'GIS', 'MO', 'DA', 'YR', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
+                  'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
+                  'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
+                  'NO3_OUTkg', 'NH4_INkg', 'NH4_OUTkg', 'NO2_INkg', 'NO2_OUTkg',
+                  'MINP_INkg', 'MINP_OUTkg', 'CHLA_INkg', 'CHLA_OUTkg', 'CBOD_INkg',
+                  'CBOD_OUTkg', 'DISOX_INkg', 'DISOX_OUTkg', 'SOLPST_INmg', 'SOLPST_OUTmg',
+                  'SORPST_INmg', 'SORPST_OUTmg', 'REACTPSTmg', 'VOLPSTmg', 'SETTLPSTmg',
+                  'RESUSP_PSTmg', 'DIFFUSEPSTmg', 'REACBEDPSTmg', 'BURYPSTmg', 'BED_PSTmg',
+                  'BACTP_OUTct', 'BACTLP_OUTct', 'CMETAL']
+
+    param_names = ['', 'Reach', 'GIS', 'Month', 'Day', 'Year', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
+                   'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
+                   'Sediment Concentration (mg/kg)', 'Organic Nitrogen Inflow (kg)', 'Organic Nitrogen Outflow (kg)',
+                   'Organic Phosphorus Inflow (kg)', 'Organic Phosphorus Outflow (kg)', 'Nitrate Inflow (kg)',
+                   'Nitrate Outflow (kg)'
+                   ]
+
+    dt_start = datetime.strptime(start, '%B %d, %Y')
+    start_index = dt_start.timetuple().tm_yday
+    dt_end = datetime.strptime(end, '%B %d, %Y')
+    end_index = dt_end.timetuple().tm_yday
+
+    year_start = dt_start.year
+    month_start = dt_start.month
+    day_start = dt_start.day
+    year_end = dt_end.year
+    month_end = dt_end.month
+    day_end = dt_end.day
+
+    daterange = pd.date_range(start, end, freq='1d')
+    daterange = daterange.union([daterange[-1]])
+    daterange_str = [d.strftime('%b %d, %Y') for d in daterange]
+    daterange_mil = [int(d.strftime('%s')) * 1000 for d in daterange]
+
+    rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters, 'Values': {}, 'Names': [], 'Timestep': 'Daily'}
+
+    for x in range(0, len(parameters)):
+
+        param_index = param_vals.index(parameters[x])
+        param_name = param_names[param_index]
+
+        data = []
+        f = open(daily_rch_path)
+
+        header1 = f.readline()
+        header2 = f.readline()
+        header3 = f.readline()
+        header4 = f.readline()
+        header5 = f.readline()
+        header6 = f.readline()
+        header7 = f.readline()
+        header8 = f.readline()
+        header9 = f.readline()
+
+        for num, line in enumerate(f,1):
+            line = line.strip()
+            columns = line.split()
+            if columns[1] == str(reachid) and str(year_start) <= columns[5] <= str(year_end):
+                data.append(float(columns[param_index]))
+                print(data)
+
+        f.close()
+        ts = []
+        data = data[start_index - 1:end_index]
+        i = 0
+        while i < len(data):
+            ts.append([daterange_mil[i],data[i]])
+            i += 1
 
 
+        rchDict['Values'][x] = ts
+        rchDict['Names'].append(param_name)
 
 
+    return rchDict
 
