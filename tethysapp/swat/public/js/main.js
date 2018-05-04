@@ -514,8 +514,8 @@ function ajax_update_database(ajax_url, ajax_data) {
             var options = {
                 format: 'MM d, yyyy',
                 startDate: 'January 1, 2001',
-                endDate: 'January 2, 2011',
-                startView: 'month',
+                endDate: 'December 31, 2015',
+                startView: 'decade',
                 minViewMode: 'days',
                 orientation: 'bottom auto'
             }

@@ -11,7 +11,7 @@ class swat(TethysAppBase):
     icon = 'swat/images/swat_clipart.png'
     package = 'swat'
     root_url = 'swat'
-    color = '#00a2c6'
+    color = '#2c3e50'
     description = 'Place a brief description of your app here.'
     tags = ''
     enable_feedback = False

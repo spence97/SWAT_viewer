@@ -68,13 +68,13 @@
 
 
 #start_pick{
-    font-size: 12px;
+    font-size: 11px;
     border-top-left-radius: 5px !important;
     border-bottom-left-radius: 5px !important;
 }
 
 #end_pick{
-    font-size: 12px;
+    font-size: 11px;
     border-top-right-radius: 5px !important;
     border-bottom-right-radius: 5px !important;
 }
