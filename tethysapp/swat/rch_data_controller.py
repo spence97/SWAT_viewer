@@ -7,7 +7,7 @@ from .app import swat as app
 
 app_workspace = app.get_app_workspace()
 monthly_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_monthly.rch')
-daily_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_daily.rch')
+daily_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_daily_15years.rch')
 
 
 def extract_monthly_rch(start, end, parameters, reachid):
@@ -107,12 +107,8 @@ def extract_daily_rch(start, end, parameters, reachid):
     dt_end = datetime.strptime(end, '%B %d, %Y')
     end_index = dt_end.timetuple().tm_yday
 
-    year_start = dt_start.year
-    month_start = dt_start.month
-    day_start = dt_start.day
-    year_end = dt_end.year
-    month_end = dt_end.month
-    day_end = dt_end.day
+    year_start = str(dt_start.year)
+    year_start_str = ' ' + year_start + ' '
 
     daterange = pd.date_range(start, end, freq='1d')
     daterange = daterange.union([daterange[-1]])
@@ -139,16 +135,21 @@ def extract_daily_rch(start, end, parameters, reachid):
         header8 = f.readline()
         header9 = f.readline()
 
+        for skip_line in f:
+            if year_start_str in skip_line:
+                break
+
         for num, line in enumerate(f,1):
             line = line.strip()
             columns = line.split()
-            if columns[1] == str(reachid) and str(year_start) <= columns[5] <= str(year_end):
+            date = datetime.strptime(columns[3] + '/' + columns [4] + '/' + columns[5], '%m/%d/%Y')
+            if columns[1] == str(reachid) and dt_start <= date <= dt_end:
                 data.append(float(columns[param_index]))
-                print(data)
+            elif date > dt_end:
+                break
 
         f.close()
         ts = []
-        data = data[start_index - 1:end_index]
         i = 0
         while i < len(data):
             ts.append([daterange_mil[i],data[i]])

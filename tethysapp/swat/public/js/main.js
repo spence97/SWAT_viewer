@@ -327,6 +327,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                 endDate: 'December 2015',
                 startView: 'decade',
                 minViewMode: 'months',
+                orientation: 'bottom auto'
             }
         $('.input-daterange input').each(function() {
             $(this).datepicker(options);
@@ -516,6 +517,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                 endDate: 'January 2, 2011',
                 startView: 'month',
                 minViewMode: 'days',
+                orientation: 'bottom auto'
             }
             $('.input-daterange input').each(function() {
                 $(this).datepicker('setDate', null)
@@ -531,6 +533,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                 endDate: 'December 2015',
                 startView: 'decade',
                 minViewMode: 'months',
+                orientation: 'bottom auto'
             }
             $('.input-daterange input').each(function() {
                 $(this).datepicker('setDate', null)
