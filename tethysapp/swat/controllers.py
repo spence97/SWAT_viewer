@@ -95,7 +95,6 @@ def timeseries(request):
     parameters = request.POST.getlist('parameters[]')
     streamID = request.POST.get('streamID')
     monthOrDay = request.POST.get('monthOrDay')
-    print(monthOrDay)
 
     if monthOrDay == 'Monthly':
         timeseries_dict = extract_monthly_rch(start,end,parameters,streamID)
@@ -104,13 +103,8 @@ def timeseries(request):
 
 
     dates = timeseries_dict['Dates']
-    print(dates)
     values = timeseries_dict['Values']
-    print(values)
     timestep = timeseries_dict['Timestep']
-    print(timestep)
-    print(streamID)
-    print(parameters)
     write_csv(streamID, parameters, dates, values, timestep)
     write_ascii(streamID, parameters, dates, values, timestep)
 

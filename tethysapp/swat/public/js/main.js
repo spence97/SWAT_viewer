@@ -233,9 +233,9 @@ function ajax_update_database(ajax_url, ajax_data) {
                     var colors = ['#002cce','#c10000', '#0e6d00', '#7400ce']
                     var data_tag
                     if (monthOrDay == 'Monthly') {
-                       data_tag = '{point.y:,.0f}'
+                       data_tag = '{point.y:,.1f}'
                     } else {
-                       data_tag = '{point.y:,.6f}'
+                       data_tag = '{point.y:,.1f}'
                     }
 
                     $.each( names, function( i, name ) {
@@ -353,11 +353,8 @@ function ajax_update_database(ajax_url, ajax_data) {
 
         map.on("singleclick",function(evt){
             var start = $('#start_pick').val();
-            console.log(start)
             var end = $('#end_pick').val();
-            console.log(start)
             var parameter = $('#param_select option:selected').val();
-            console.log(parameter)
             map.removeLayer(featureOverlayStream);
             map.removeLayer(featureOverlaySubbasin);
 
@@ -522,9 +519,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             $('.input-daterange input').each(function() {
                 $(this).datepicker('setDate', null)
                 $(this).datepicker('destroy');
-                console.log('monthly destroy')
                 $(this).datepicker(options);
-                console.log('daily create')
             });
         } else {
             var options = {
@@ -538,9 +533,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             $('.input-daterange input').each(function() {
                 $(this).datepicker('setDate', null)
                 $(this).datepicker('destroy');
-                console.log('daily destroy')
                 $(this).datepicker(options);
-                console.log('monthly create')
             });
         }
         $('#start_pick').attr('placeholder', 'Start Date')
