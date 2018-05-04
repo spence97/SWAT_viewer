@@ -570,6 +570,9 @@ $(function() {
         $(".monthDayToggle").change(function(){
             update_dates();
         });
+        $("#upload").click(function() {
+            $("#upload-modal").modal('show');
+        })
     });
 
 

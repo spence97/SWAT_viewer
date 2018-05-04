@@ -73,13 +73,19 @@ def home(request):
                                                 'allowClear': False},
                                )
 
-
-
+    watershed_select = SelectInput(name='watershed_select',
+                               multiple=False,
+                               original=False,
+                               options=[('Lower Mekong', 'lower_mekong')],
+                               select2_options={'placeholder': 'Select a Watershed to View',
+                                                'allowClear': False},
+                               )
 
     context = {
         'start_pick': start_pick,
         'end_pick': end_pick,
         'param_select': param_select,
+        'watershed_select': watershed_select
     }
 
     return render(request, 'swat/home.html', context)
