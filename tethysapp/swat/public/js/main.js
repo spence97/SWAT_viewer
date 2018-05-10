@@ -498,9 +498,47 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     };
 
+    add_basins = function(){
+        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:subbasin</Name><UserStyle><FeatureTypeStyle><Rule>\
+            <PolygonSymbolizer>\
+            <Name>rule1</Name>\
+            <Title>Watersheds</Title>\
+            <Abstract></Abstract>\
+            <Fill>\
+              <CssParameter name="fill">#a9c5ce</CssParameter>\
+              <CssParameter name="fill-opacity">.5</CssParameter>\
+            </Fill>\
+            <Stroke>\
+              <CssParameter name="stroke">#2d2c2c</CssParameter>\
+              <CssParameter name="stroke-width">.5</CssParameter>\
+            </Stroke>\
+            </PolygonSymbolizer>\
+            </Rule>\
+            </FeatureTypeStyle>\
+            </UserStyle>\
+            </NamedLayer>\
+            </StyledLayerDescriptor>';
+
+        wms_source = new ol.source.ImageWMS({
+            url: 'http://tethys-staging.byu.edu:8181/geoserver/wms',
+            params: {'LAYERS':'swat_mekong:subbasin','SLD_BODY':sld_string},
+            serverType: 'geoserver',
+            crossOrigin: 'Anonymous'
+        });
+
+        basin_layer = new ol.layer.Image({
+            source: wms_source
+        });
+
+
+        map.addLayer(basin_layer);
+
+    }
+
     init_all = function(){
         init_map();
         init_events();
+        add_basins();
         add_streams();
     };
 
