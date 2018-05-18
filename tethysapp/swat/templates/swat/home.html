@@ -30,20 +30,23 @@
 {% endblock %}
 
 {% block app_navigation_items %}
+  <br>
   <h6>Select Watershed</h6>
   {%gizmo watershed_select %}
   <div id="download_file" class="btn-group download" role="group">
-      <a class="btn btn-default" role="button" id="upload">
+      <a class="btn btn-primary" role="button" id="upload">
           <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;&nbsp;Upload Custom Watershed </a>
   </div>
+  <br>
   <div id="paramSelect">
-    <h6>Parameters</h6>
+    <h6>Select Parameters</h6>
     {% gizmo param_select %}
   </div>
+  <br>
   <div class="monthDayToggle">
       <h6>Select Dates</h6>
     <label>
-       <input type="checkbox" checked data-toggle="toggle" data-on="Monthly" data-off="Daily" data-onstyle="success" data-offstyle="danger">
+       <input id="toggle_switch" type="checkbox" checked data-toggle="toggle" data-on="Monthly" data-off="Daily" data-onstyle="success" data-offstyle="danger">
     </label>
   </div>
   <div class="input-group input-daterange">
@@ -126,15 +129,9 @@
         </div>
         <div class="modal-body">
           <div class="form-container">
-            <form class="form" action="/static/swat/watersheds/watershed.php">
-              Streams Shapefile: <input type="file" id="streams-shp" />
-              StreamID Field Name: <input type="text" name="streamID" />
-              <br>
-              <br>
-              Subbasin Shapefile: <input type="file" id="subbasins-shp" />
-              <br>
-              SWAT Output .rch files: <input type="file" id="SWAT-rch" />
-              <br>
+            <form class="form" method="post" enctype="multipart/form-data" action="../upload/">
+              {% csrf_token %}
+              {{ watershedform.as_p }}
               <input type="submit" value="Submit">
             </form>
           </div>

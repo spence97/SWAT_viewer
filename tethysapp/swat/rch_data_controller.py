@@ -5,12 +5,11 @@ import os
 from .app import swat as app
 
 
-app_workspace = app.get_app_workspace()
-monthly_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_monthly.rch')
-daily_rch_path = os.path.join(app_workspace.path, 'Output Data', 'output_daily_15years.rch')
+def extract_monthly_rch(watershed, start, end, parameters, reachid):
 
+    app_workspace = app.get_app_workspace()
+    monthly_rch_path = os.path.join(app_workspace.path, 'rch_data', watershed, 'output_monthly.rch')
 
-def extract_monthly_rch(start, end, parameters, reachid):
     param_vals = ['', 'RCH', 'GIS', 'MON', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
                   'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
                   'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
@@ -84,7 +83,11 @@ def extract_monthly_rch(start, end, parameters, reachid):
     return rchDict
 
 
-def extract_daily_rch(start, end, parameters, reachid):
+def extract_daily_rch(watershed, start, end, parameters, reachid):
+
+    app_workspace = app.get_app_workspace()
+    daily_rch_path = os.path.join(app_workspace.path, 'rch_data', watershed, 'output_daily.rch')
+
     param_vals = ['', 'RCH', 'GIS', 'MO', 'DA', 'YR', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
                   'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
                   'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',

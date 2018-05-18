@@ -81,6 +81,21 @@
 
 .monthDayToggle {
     margin: auto;
+    width: 100%
+}
+
+.toggle-group {
+    width: 200%
+}
+
+.monthDayToggle h6 {
+    float: left;
+    margin-right: 25%
+}
+
+#toggle_switch {
+    position: absolute;
+    right: 0;
 }
 
 #app-navigation {
@@ -90,5 +105,6 @@
 #inner-app-content {
     padding: 0
 }
+
 
 

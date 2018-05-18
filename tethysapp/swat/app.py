@@ -33,6 +33,11 @@ class swat(TethysAppBase):
                 name='time-series',
                 url='swat/timeseries',
                 controller='swat.controllers.timeseries'
+            ),
+            UrlMap(
+                name='upload_files',
+                url='swat/upload',
+                controller='swat.controllers.upload_files'
             )
         )
 

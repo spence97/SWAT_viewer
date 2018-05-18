@@ -139,7 +139,7 @@ function ajax_update_database(ajax_url, ajax_data) {
         var view = new ol.View({
             center: [104.5, 17.5],
             projection: projection,
-            zoom: 6.8
+            zoom: 5.5
         });
         wms_source = new ol.source.ImageWMS();
 
@@ -169,7 +169,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     };
 
-    get_time_series = function(start, end, parameters, streamID) {
+    get_time_series = function(watershed, start, end, parameters, streamID) {
         console.log(start)
         console.log(end)
         console.log(parameters)
@@ -185,6 +185,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             type: 'POST',
             url: '/apps/swat/timeseries/',
             data: {
+                'watershed': watershed,
                 'startDate': start,
                 'endDate': end,
                 'parameters': parameters,
@@ -353,14 +354,16 @@ function ajax_update_database(ajax_url, ajax_data) {
 
         map.on("singleclick",function(evt){
             var start = $('#start_pick').val();
+            console.log(start)
             var end = $('#end_pick').val();
+            console.log(end)
             var parameter = $('#param_select option:selected').val();
             map.removeLayer(featureOverlayStream);
             map.removeLayer(featureOverlaySubbasin);
 
 
             if (map.getTargetElement().style.cursor == "pointer") {
-                if ((parameter === undefined) || (start === 'Select Start Date') || (end === 'Select End Date')) {
+                if ((parameter === undefined) || (start == 'Start Date') || (end == 'End Date')) {
                     map.addLayer(featureOverlaySubbasin);
                     map.addLayer(featureOverlayStream);
                     window.alert("Please be sure to select a parameter, start date, and end date before selecting a stream.")
@@ -386,8 +389,10 @@ function ajax_update_database(ajax_url, ajax_data) {
                             url: wms_url,
                             dataType: 'json',
                             success: function (result) {
+                                console.log(result)
                                var parameters = [];
                                var streamID = parseFloat(result["features"][0]["properties"]["Subbasin"]);
+                               var watershed = $('#watershed_select').val();
                                var start = $('#start_pick').val();
                                var end = $('#end_pick').val();
                                $('#param_select option:selected').each(function() {
@@ -434,7 +439,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                map.addLayer(featureOverlaySubbasin);
                                map.addLayer(featureOverlayStream);
-                               get_time_series(start, end, parameters, streamID);
+                               get_time_series(watershed, start, end, parameters, streamID);
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 console.log(Error);
@@ -464,7 +469,62 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 
     add_streams = function(){
-        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:reach</Name><UserStyle><FeatureTypeStyle><Rule>\
+
+        var store = $('#watershed_select option:selected').val()
+        var store_id = 'swat:' + store + '-reach'
+        if (store === 'lower_mekong') {
+            var view = new ol.View({
+                center: [104.5, 17.5],
+                projection: 'EPSG:4326',
+                zoom: 6.5
+            });
+
+            map.setView(view)
+
+        } else {
+            var layerParams
+            var layer_xml
+            var bbox
+            var srs
+            var wmsCapUrl = "http://localhost:8080/geoserver/wms?service=WMS&version=1.1.1&request=GetCapabilities&"
+
+            $.ajax({
+                type: "GET",
+                url: wmsCapUrl,
+                dataType: 'xml',
+                success: function (xml) {
+                    var layers = xml.getElementsByTagName("Layer");
+                    var parser = new ol.format.WMSCapabilities();
+                    var result = parser.read(xml);
+                    var layers = result['Capability']['Layer']['Layer']
+                    for (var i=0; i<layers.length; i++) {
+                        if(layers[i].Title == store + '-basin') {
+                            layer_xml = xml.getElementsByTagName('Layer')[i+1]
+                            layerParams = layers[i]
+                        }
+                    }
+
+                    srs = layer_xml.getElementsByTagName('SRS')[0].innerHTML
+                    bbox = layerParams.BoundingBox[0].extent
+                    console.log(srs, bbox)
+                    var new_extent = ol.proj.transformExtent(bbox, srs, 'EPSG:4326');
+                    var center = ol.extent.getCenter(new_extent)
+                    console.log(center)
+                    var view = new ol.View({
+                        center: center,
+                        projection: 'EPSG:4326',
+                        extent: new_extent,
+                        zoom: 6
+                    });
+
+                    map.setView(view)
+                    map.getView().fit(new_extent, map.getSize());
+                }
+            });
+        }
+
+
+        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>'+ store_id + '</Name><UserStyle><FeatureTypeStyle><Rule>\
             <Name>rule1</Name>\
             <Title>Blue Line</Title>\
             <Abstract>A solid blue line with a 2 pixel width</Abstract>\
@@ -480,11 +540,9 @@ function ajax_update_database(ajax_url, ajax_data) {
             </NamedLayer>\
             </StyledLayerDescriptor>';
 
-
-
         wms_source = new ol.source.ImageWMS({
-            url: 'http://tethys-staging.byu.edu:8181/geoserver/wms',
-            params: {'LAYERS':'swat_mekong:reach','SLD_BODY':sld_string},
+            url: 'http://localhost:8080/geoserver/wms',
+            params: {'LAYERS':store_id,'SLD_BODY':sld_string},
             serverType: 'geoserver',
             crossOrigin: 'Anonymous'
         });
@@ -499,7 +557,9 @@ function ajax_update_database(ajax_url, ajax_data) {
     };
 
     add_basins = function(){
-        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:subbasin</Name><UserStyle><FeatureTypeStyle><Rule>\
+        var store = $('#watershed_select option:selected').val()
+        var store_id = 'swat:' + store + '-subbasin'
+        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>'+ store_id + '</Name><UserStyle><FeatureTypeStyle><Rule>\
             <PolygonSymbolizer>\
             <Name>rule1</Name>\
             <Title>Watersheds</Title>\
@@ -520,8 +580,8 @@ function ajax_update_database(ajax_url, ajax_data) {
             </StyledLayerDescriptor>';
 
         wms_source = new ol.source.ImageWMS({
-            url: 'http://tethys-staging.byu.edu:8181/geoserver/wms',
-            params: {'LAYERS':'swat_mekong:subbasin','SLD_BODY':sld_string},
+            url: 'http://localhost:8080/geoserver/wms',
+            params: {'LAYERS':store_id,'SLD_BODY':sld_string},
             serverType: 'geoserver',
             crossOrigin: 'Anonymous'
         });
@@ -578,13 +638,6 @@ function ajax_update_database(ajax_url, ajax_data) {
         $('#end_pick').attr('placeholder', 'End Date')
 
     }
-//
-
-
-
-
-
-
 
 
     /************************************************************************
@@ -607,10 +660,20 @@ $(function() {
         console.log('rendering page');
         $(".monthDayToggle").change(function(){
             update_dates();
+            map.removeLayer(featureOverlaySubbasin)
+            map.removeLayer(featureOverlayStream)
         });
         $("#upload").click(function() {
             $("#upload-modal").modal('show');
-        })
+        });
+        $("#watershed_select").change(function(){
+            map.removeLayer(basin_layer);
+            map.removeLayer(streams_layer);
+            map.removeLayer(featureOverlaySubbasin)
+            map.removeLayer(featureOverlayStream)
+            add_basins();
+            add_streams();
+        });
     });
 
 
