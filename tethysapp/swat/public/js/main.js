@@ -116,6 +116,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 }
 
     init_map = function() {
+//      Initialize all the initial map elements (projection, basemap, layers, center, zoom)
         var projection = ol.proj.get('EPSG:4326');
         var baseLayer = new ol.layer.Tile({
             source: new ol.source.BingMaps({
@@ -123,10 +124,6 @@ function ajax_update_database(ajax_url, ajax_data) {
                 imagerySet: 'AerialWithLabels' // Options 'Aerial', 'AerialWithLabels', 'Road'
             })
         });
-
-
-
-
 
         featureOverlayStream = new ol.layer.Vector({
             source: new ol.source.Vector()
@@ -170,17 +167,14 @@ function ajax_update_database(ajax_url, ajax_data) {
     };
 
     get_time_series = function(watershed, start, end, parameters, streamID) {
-        console.log(start)
-        console.log(end)
-        console.log(parameters)
-        console.log(streamID)
+//      Function to pass selected dates, parameters, and streamID to the rch data parser python function and then plot the data
         var monthOrDay
         if ($(".toggle").hasClass( "off" )) {
             monthOrDay = 'Daily'
         } else {
             monthOrDay = 'Monthly'
         }
-        console.log(monthOrDay)
+//      AJAX call to the timeseries python controller to run the rch data parser function
         $.ajax({
             type: 'POST',
             url: '/apps/swat/timeseries/',
@@ -201,6 +195,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                 }, 5000);
             },
             success: function (data) {
+//              Take the resulting json object from the python function and plot it using the Highcharts API
                 var values = data.Values
                 var dates = data.Dates
                 var parameters = data.Parameters
@@ -322,6 +317,7 @@ function ajax_update_database(ajax_url, ajax_data) {
     };
 
     init_events = function(){
+//      Initialize all map interactions
         var options = {
                 format: 'MM yyyy',
                 startDate: 'January 2005',
@@ -353,6 +349,7 @@ function ajax_update_database(ajax_url, ajax_data) {
         }());
 
         map.on("singleclick",function(evt){
+//
             var start = $('#start_pick').val();
             console.log(start)
             var end = $('#end_pick').val();
@@ -469,7 +466,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 
     add_streams = function(){
-
+//      add the streams for the selected watershed
         var store = $('#watershed_select option:selected').val()
         var store_id = 'swat:' + store + '-reach'
         if (store === 'lower_mekong') {
@@ -487,7 +484,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             var bbox
             var srs
             var wmsCapUrl = "http://localhost:8080/geoserver/wms?service=WMS&version=1.1.1&request=GetCapabilities&"
-
+//          Get the extent and projection of the selected watershed and set the map view to fit it
             $.ajax({
                 type: "GET",
                 url: wmsCapUrl,
@@ -523,7 +520,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             });
         }
 
-
+//      Set the style for the streams layer
         var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>'+ store_id + '</Name><UserStyle><FeatureTypeStyle><Rule>\
             <Name>rule1</Name>\
             <Title>Blue Line</Title>\
@@ -539,7 +536,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             </UserStyle>\
             </NamedLayer>\
             </StyledLayerDescriptor>';
-
+//      Set the wms source to the url, workspace, and store for the streams of the selected watershed
         wms_source = new ol.source.ImageWMS({
             url: 'http://localhost:8080/geoserver/wms',
             params: {'LAYERS':store_id,'SLD_BODY':sld_string},
@@ -551,14 +548,16 @@ function ajax_update_database(ajax_url, ajax_data) {
             source: wms_source
         });
 
-
+//      add streams to the map
         map.addLayer(streams_layer);
 
     };
 
     add_basins = function(){
+//      add the streams for the selected watershed
         var store = $('#watershed_select option:selected').val()
         var store_id = 'swat:' + store + '-subbasin'
+//      Set the style for the subbasins layer
         var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>'+ store_id + '</Name><UserStyle><FeatureTypeStyle><Rule>\
             <PolygonSymbolizer>\
             <Name>rule1</Name>\
@@ -579,6 +578,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             </NamedLayer>\
             </StyledLayerDescriptor>';
 
+//      Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
         wms_source = new ol.source.ImageWMS({
             url: 'http://localhost:8080/geoserver/wms',
             params: {'LAYERS':store_id,'SLD_BODY':sld_string},
@@ -590,7 +590,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             source: wms_source
         });
 
-
+//      add subbasins to the map
         map.addLayer(basin_layer);
 
     }
@@ -603,7 +603,7 @@ function ajax_update_database(ajax_url, ajax_data) {
     };
 
 
-
+//  When the Monthly/Daily toggle is clicked, update the datepickers to show only available options
     update_dates = function() {
         if($(".toggle").hasClass( "off")) {
             var options = {

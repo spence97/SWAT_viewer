@@ -4,28 +4,57 @@ import pandas as pd
 import os
 from .app import swat as app
 
-
+param_names = {'':'', 'RCH':'Reach', 'GIS':'GIS',  'MO':'Month', 'DA':'Day', 'YR':'Year', 'AREAkm2':'Area (km2)',
+               'FLOW_INcms':'Inflow (cms)', 'FLOW_OUTcms':'Outflow (cms)', 'EVAPcms':'Evaporation (cms)',
+               'TLOSS':'Transpiration Loss (cms)', 'SED_INtons':'Sediment Inflow (tons)', 'SED_OUTtons':'Sediment Outflow (tons)',
+               'SEDCONCmg/kg':'Sediment Concentration (mg/kg)', 'ORGN_INkg':'Organic Nitrogen Inflow (kg)',
+               'ORGN_OUTkg':'Organic Nitrogen Outflow (kg)', 'ORGP_INkg':'Organic Phosphorus Inflow (kg)',
+               'ORGP_OUTkg':'Organic Phosphorus Outflow (kg)', 'NO3_INkg':'Nitrate Inflow (kg)','NO3_OUTkg':'Nitrate Outflow (kg)',
+               'NH4_INkg':'Ammonia Inflow (kg)', 'NH4_OUTkg': 'Ammonia Outflow (kg)', 'NO2_INkg': 'Nitrogen Dioxide Inflow (kg)',
+               'NO2_OUTkg': 'Nitrogen Dioxide Outflow (kg)', 'MINP_INkg':'Mineral Phosphorus Inflow (kg)',
+               'MINP_OUTkg':'Mineral Phosphorus Outflow (kg)', 'CHLA_INkg':'Chlorophyll-a Inflow (kg)', 'CHLA_OUTkg': 'Chlorophyll-a Outflow (kg)',
+               'CBOD_INkg':'Carbonaceous BOD Inflow (kg)','CBOD_OUTkg': 'Carbonaceous BOD Outflow (kg)',
+               'DISOX_INkg': 'Dissolved Oxygen Inflow (kg)', 'DISOX_OUTkg': 'Dissolved Oxygen Outflow (kg)',
+               'SOLPST_INmg': 'Soluble Pesticide Inflow (mg)', 'SOLPST_OUTmg':'Soluble Pesticide Outflow (mg)',
+               'SORPST_INmg':'Pesticide Sorbed to Sediment Transport Inflow (mg)',
+               'SORPST_OUTmg':'Pesticide Sorbed to Sediment Transport Outflow (mg)', 'REACTPSTmg':'Loss of Pesticide from Water by Reaction (mg)',
+               'VOLPSTmg':'Loss of Pesticide from Water by Volatilization (mg)', 'SETTLPSTmg':'Pesticide Transfer from Water to River Bed Sediment (mg)',
+               'RESUSP_PSTmg':'Resuspension of Pesticide from River Bed to Water (mg)', 'DIFFUSEPSTmg':'Diffusion of Pesticide from Water to River Bed Sediment (mg)',
+               'REACBEDPSTmg':'Loss of Pesticide from River Bed by Reaction (mg)', 'BURYPSTmg':'Loss of Pesticide from River Bed by Buryial (mg)',
+               'BED_PSTmg':'Pesticide in River Bed Sediment (mg)', 'BACTP_OUTct':'Persistent Bacterial Outflow (count)',
+               'BACTLP_OUT':'Less Persistent Bacterial Outflow (count)', 'CMETAL#1kg':'Conservative metal #1 Outflow (kg)',
+               'CMETAL#2kg': 'Conservative Metal #2 Outflow (kg)', 'CMETAL#3kg':'Conservative Metal #3 Outflow (kg)', 'TOT Nkg':'Total Nitrogen (kg)',
+               'TOT Pkg':'Total Phosphourus (kg)', 'NO3ConcMg/l':'Nitrate Concentration (mg/l)','WTEMPdegc':'Water Temperature (deg C)'
+               }
 def extract_monthly_rch(watershed, start, end, parameters, reachid):
 
     app_workspace = app.get_app_workspace()
     monthly_rch_path = os.path.join(app_workspace.path, 'rch_data', watershed, 'output_monthly.rch')
+    param_vals = ['']
+    with open(monthly_rch_path) as f:
+        for line in f:
+            if 'RCH' in line:
+                paramstring = line.strip()
+                for i in range(0, len(paramstring)-1):
+                    if paramstring[i].islower() and paramstring[i+1].isupper() and paramstring[i] != 'c':
+                        print(paramstring[i])
+                        print(paramstring[i+1])
+                        paramstring = paramstring[0:i+1] + ' ' + paramstring[i+1:]
+                        print(paramstring)
+                param_vals = param_vals + paramstring.split()
+                for i in range(0,len(param_vals)-3):
+                    if param_vals[i] == 'TOT':
+                        new_val = param_vals[i]+param_vals[i+1]
+                        param_vals[i] = new_val
+                        param_vals.pop(i+1)
+                    # if param_vals[i] == 'NO3Conc':
+                    #     new_val = param_vals[i] + param_vals[i+1]
+                    #     param_vals[i] = new_val
+                    #     param_vals.pop(i+1)
+                break
+    print(param_vals)
 
-    param_vals = ['', 'RCH', 'GIS', 'MON', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
-                  'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
-                  'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
-                  'NO3_OUTkg', 'NH4_INkg', 'NH4_OUTkg', 'NO2_INkg', 'NO2_OUTkg',
-                  'MINP_INkg', 'MINP_OUTkg', 'CHLA_INkg', 'CHLA_OUTkg', 'CBOD_INkg',
-                  'CBOD_OUTkg', 'DISOX_INkg', 'DISOX_OUTkg', 'SOLPST_INmg', 'SOLPST_OUTmg',
-                  'SORPST_INmg', 'SORPST_OUTmg', 'REACTPSTmg', 'VOLPSTmg', 'SETTLPSTmg',
-                  'RESUSP_PSTmg', 'DIFFUSEPSTmg', 'REACBEDPSTmg', 'BURYPSTmg', 'BED_PSTmg',
-                  'BACTP_OUTct', 'BACTLP_OUTct', 'CMETAL']
 
-    param_names = ['', 'Reach', 'GIS', 'Month', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
-                   'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
-                   'Sediment Concentration (mg/kg)', 'Organic Nitrogen Inflow (kg)', 'Organic Nitrogen Outflow (kg)',
-                   'Organic Phosphorus Inflow (kg)', 'Organic Phosphorus Outflow (kg)', 'Nitrate Inflow (kg)',
-                   'Nitrate Outflow (kg)'
-                   ]
     dt_start = datetime.strptime(start, '%B %Y')
     dt_end = datetime.strptime(end, '%B %Y')
 
@@ -48,7 +77,8 @@ def extract_monthly_rch(watershed, start, end, parameters, reachid):
     rchDict = {'Dates': daterange_str, 'ReachID': reachid, 'Parameters': parameters, 'Values':{}, 'Names': [], 'Timestep': 'Monthly'}
     for x in range(0,len(parameters)):
         param_index = param_vals.index(parameters[x])
-        param_name = param_names[param_index]
+        param_name = param_names[parameters[x]]
+        print(param_name)
         data = []
         f = open(monthly_rch_path)
 
@@ -88,15 +118,14 @@ def extract_daily_rch(watershed, start, end, parameters, reachid):
     app_workspace = app.get_app_workspace()
     daily_rch_path = os.path.join(app_workspace.path, 'rch_data', watershed, 'output_daily.rch')
 
-    param_vals = ['', 'RCH', 'GIS', 'MO', 'DA', 'YR', 'AREAkm2', 'FLOW_INcms', 'FLOW_OUTcms',
-                  'EVAPcms', 'TLOSScms', 'SED_INtons', 'SED_OUTtons', 'SEDCONCmg/kg',
-                  'ORGN_INkg', 'ORGN_OUTkg', 'ORGP_INkg', 'ORGP_OUTkg', 'NO3_INkg',
-                  'NO3_OUTkg', 'NH4_INkg', 'NH4_OUTkg', 'NO2_INkg', 'NO2_OUTkg',
-                  'MINP_INkg', 'MINP_OUTkg', 'CHLA_INkg', 'CHLA_OUTkg', 'CBOD_INkg',
-                  'CBOD_OUTkg', 'DISOX_INkg', 'DISOX_OUTkg', 'SOLPST_INmg', 'SOLPST_OUTmg',
-                  'SORPST_INmg', 'SORPST_OUTmg', 'REACTPSTmg', 'VOLPSTmg', 'SETTLPSTmg',
-                  'RESUSP_PSTmg', 'DIFFUSEPSTmg', 'REACBEDPSTmg', 'BURYPSTmg', 'BED_PSTmg',
-                  'BACTP_OUTct', 'BACTLP_OUTct', 'CMETAL']
+    param_vals = ['']
+    with open(daily_rch_path) as f:
+        for line in f:
+            if 'RCH' in line:
+                param_vals = param_vals + line.strip().split()
+                break
+
+    print(param_vals)
 
     param_names = ['', 'Reach', 'GIS', 'Month', 'Day', 'Year', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
                    'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
@@ -127,16 +156,6 @@ def extract_daily_rch(watershed, start, end, parameters, reachid):
 
         data = []
         f = open(daily_rch_path)
-
-        header1 = f.readline()
-        header2 = f.readline()
-        header3 = f.readline()
-        header4 = f.readline()
-        header5 = f.readline()
-        header6 = f.readline()
-        header7 = f.readline()
-        header8 = f.readline()
-        header9 = f.readline()
 
         for skip_line in f:
             if year_start_str in skip_line:

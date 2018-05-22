@@ -12,7 +12,7 @@ def home(request):
     """
     Controller for the Output Viewer page.
     """
-
+    # Get available watersheds (with rch data and wms capabilities) and set select_watershed options
     app_workspace = app.get_app_workspace()
     rch_path = os.path.join(app_workspace.path, 'rch_data')
     watershed_options = []
@@ -26,9 +26,10 @@ def home(request):
             if name not in watershed_options:
                 watershed_options.append((name,value))
 
-
+    # pass the upload watershed form into the view so it can be shown in the web page
     watershedform = UploadWatershedForm()
 
+    # set the initial date picker options
     start = 'January 2005'
     end = 'December 2015'
     format = 'MM yyyy'
@@ -90,6 +91,7 @@ def timeseries(request):
     """
     Controller for the time-series plot.
     """
+    # Get values passed from the timeseries function in main.js
     watershed = request.POST.get('watershed')
     start = request.POST.get('startDate')
     end = request.POST.get(str('endDate'))
@@ -97,18 +99,21 @@ def timeseries(request):
     streamID = request.POST.get('streamID')
     monthOrDay = request.POST.get('monthOrDay')
 
+    # Call the correct rch data parser function based on whether the monthly or daily toggle was selected
     if monthOrDay == 'Monthly':
         timeseries_dict = extract_monthly_rch(watershed, start,end,parameters,streamID)
     else:
         timeseries_dict = extract_daily_rch(watershed, start, end, parameters, streamID)
 
 
+    # Create a json object containing all necessary data to create timeseries plot in java script
     dates = timeseries_dict['Dates']
     values = timeseries_dict['Values']
     timestep = timeseries_dict['Timestep']
     write_csv(streamID, parameters, dates, values, timestep)
     write_ascii(streamID, parameters, dates, values, timestep)
 
+    # Return the json object back to main.js for timeseries plotting
     json_dict = JsonResponse(timeseries_dict)
     return (json_dict)
 
