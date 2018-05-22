@@ -2,6 +2,7 @@ from tethys_sdk.services import get_spatial_dataset_engine
 import os
 from shutil import copyfile
 from .app import swat as app
+from .config import temp_workspace
 
 WORKSPACE = 'swat'
 GEOSERVER_URI = 'http://www.example.com/swat'
@@ -10,12 +11,10 @@ def save_files(id):
 
     app_workspace = app.get_app_workspace()
     rch_path = os.path.join(app_workspace.path, 'rch_data', id)
-    temp_path = os.path.join('/Users/Student/Documents/tethys_temp_files/swat')
+    temp_path = temp_workspace
     temp_files = os.listdir(temp_path)
-    print(temp_files)
 
     for file in temp_files:
-        print(file)
         if file.endswith('.rch'):
             print('saving file to app workspace')
             temp_file_path = os.path.join(temp_path, file)
