@@ -26,6 +26,7 @@ var LIBRARY_OBJECT = (function() {
         public_interface,			// Object returned by the module
         variable_data,
         wms_workspace,
+        geoserver_url = 'http://localhost:8080/geoserver/wms/',
         wms_url,
         wms_layer,
         basin_layer,
@@ -153,15 +154,6 @@ function ajax_update_database(ajax_url, ajax_data) {
         });
 
         map.crossOrigin = 'anonymous';
-        element = document.getElementById('popup');
-
-        popup = new ol.Overlay({
-            element: element,
-            positioning: 'bottom-center',
-            stopEvent: true
-        });
-
-        map.addOverlay(popup);
 
 
     };
@@ -373,8 +365,11 @@ function ajax_update_database(ajax_url, ajax_data) {
                     $loading.removeClass('hidden');
                     $("#ts-modal").modal('show');
 
+                    var store = $('#watershed_select option:selected').val()
+                    var reach_store_id = 'swat:' + store + '-reach'
+                    var basin_store_id = 'swat:' + store + '-subbasin'
+
                     var clickCoord = evt.coordinate;
-                    popup.setPosition(clickCoord);
                     var view = map.getView();
                     var viewResolution = view.getResolution();
 
@@ -398,7 +393,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                var streamVectorSource = new ol.source.Vector({
                                     format: new ol.format.GeoJSON(),
-                                    url: 'http://tethys-staging.byu.edu:8181/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:reach&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                    url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+reach_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
                                     strategy: ol.loadingstrategy.bbox
                                });
 
@@ -414,7 +409,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                                var subbasinVectorSource = new ol.source.Vector({
                                     format: new ol.format.GeoJSON(),
-                                    url: 'http://tethys-staging.byu.edu:8181/geoserver/wms/ows?service=wfs&version=2.0.0&request=getfeature&typename=swat_mekong:subbasin&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                    url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+basin_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
                                     strategy: ol.loadingstrategy.bbox
                                });
                                var color = '#0dd8c0';
@@ -483,7 +478,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             var layer_xml
             var bbox
             var srs
-            var wmsCapUrl = "http://localhost:8080/geoserver/wms?service=WMS&version=1.1.1&request=GetCapabilities&"
+            var wmsCapUrl = geoserver_url + '?service=WMS&version=1.1.1&request=GetCapabilities&'
 //          Get the extent and projection of the selected watershed and set the map view to fit it
             $.ajax({
                 type: "GET",
@@ -538,7 +533,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             </StyledLayerDescriptor>';
 //      Set the wms source to the url, workspace, and store for the streams of the selected watershed
         wms_source = new ol.source.ImageWMS({
-            url: 'http://localhost:8080/geoserver/wms',
+            url: geoserver_url,
             params: {'LAYERS':store_id,'SLD_BODY':sld_string},
             serverType: 'geoserver',
             crossOrigin: 'Anonymous'
@@ -580,7 +575,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 //      Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
         wms_source = new ol.source.ImageWMS({
-            url: 'http://localhost:8080/geoserver/wms',
+            url: geoserver_url,
             params: {'LAYERS':store_id,'SLD_BODY':sld_string},
             serverType: 'geoserver',
             crossOrigin: 'Anonymous'
