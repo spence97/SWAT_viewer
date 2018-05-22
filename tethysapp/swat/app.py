@@ -6,7 +6,7 @@ class swat(TethysAppBase):
     Tethys app class for SWAT.
     """
 
-    name = 'SWAT Data Viewer - Mekong'
+    name = 'SWAT Data Viewer - Lower Mekong'
     index = 'swat:home'
     icon = 'swat/images/swat_clipart.png'
     package = 'swat'
@@ -33,6 +33,11 @@ class swat(TethysAppBase):
                 name='time-series',
                 url='swat/timeseries',
                 controller='swat.controllers.timeseries'
+            ),
+            UrlMap(
+                name='upload_files',
+                url='swat/upload',
+                controller='swat.controllers.upload_files'
             )
         )
 

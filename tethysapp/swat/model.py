@@ -1,5 +1,5 @@
+from django.db import models
 import csv
-from .app import swat as app
 import os
 import datetime
 
@@ -80,6 +80,10 @@ def write_ascii(streamID, parameters, dates, values, timestep):
             row_str += str(values[j][i][1]).ljust(len(head_str_parts[j + 2]) + 3, ' ')
         f.write(row_str + '\n')
 
-
-
+class new_watershed(models.Model):
+    watershed_name = models.CharField(max_length=50)
+    streams_shapefile = models.FileField(upload_to='swat/')
+    basins_shapefile = models.FileField(upload_to='swat/')
+    monthly_rch_file = models.FileField(upload_to='swat/')
+    daily_rch_file = models.FileField(upload_to='swat/')
 
