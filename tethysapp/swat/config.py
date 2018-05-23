@@ -1,4 +1,4 @@
 import os
 
 
-temp_workspace = os.path.join('/Users/Student/Documents/tethys_temp_files/swat')
+temp_workspace = os.path.join('/home/ubuntu/tethys_temp/swat')
