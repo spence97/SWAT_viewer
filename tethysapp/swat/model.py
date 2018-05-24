@@ -7,7 +7,7 @@ from .config import temp_workspace
 
 
 def write_csv(streamID, parameters, dates, values, timestep):
-    csv_path = os.path.join(temp_workspace, 'swat', 'swat_data.csv')
+    csv_path = os.path.join(temp_workspace, 'swat_data.csv')
     try:
         os.remove(csv_path)
     except OSError:
@@ -36,7 +36,7 @@ def write_csv(streamID, parameters, dates, values, timestep):
 
 
 def write_ascii(streamID, parameters, dates, values, timestep):
-    ascii_path = os.path.join(temp_workspace, 'swat', 'swat_data.txt')
+    ascii_path = os.path.join(temp_workspace, 'swat_data.txt')
     f = open(ascii_path, 'w+')
 
     f.write('StreamID: ' + str(streamID) + '\n')
