@@ -182,11 +182,11 @@ function ajax_update_database(ajax_url, ajax_data) {
             error: function () {
                 $('#error').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the data. Please try again</strong></p>');
                 $('#error').removeClass('hidden');
+                $loading.addClass('hidden')
 
                 setTimeout(function () {
                     $('#error').addClass('hidden')
-                    $loading.addClass('hidden')
-                }, 500000);
+                }, 5000);
             },
             success: function (data) {
 //              Take the resulting json object from the python function and plot it using the Highcharts API
@@ -365,6 +365,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                     $loading = $('#view-file-loading');
                     $loading.removeClass('hidden');
+                    $('#error').addClass('hidden')
                     $("#ts-modal").modal('show');
 
                     var store = $('#watershed_select option:selected').val()

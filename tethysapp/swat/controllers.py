@@ -102,7 +102,7 @@ def timeseries(request):
 
     # Call the correct rch data parser function based on whether the monthly or daily toggle was selected
     if monthOrDay == 'Monthly':
-        timeseries_dict = extract_monthly_rch(watershed, start,end,parameters,streamID)
+        timeseries_dict = extract_monthly_rch(watershed, start, end, parameters, streamID)
     else:
         timeseries_dict = extract_daily_rch(watershed, start, end, parameters, streamID)
 
