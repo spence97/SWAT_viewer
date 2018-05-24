@@ -6,6 +6,7 @@ from .model import write_csv, write_ascii
 from .app import swat as app
 from .forms import UploadWatershedForm
 from .upload_files import save_files
+from .config import data_path
 import os
 
 def home(request):
@@ -13,8 +14,8 @@ def home(request):
     Controller for the Output Viewer page.
     """
     # Get available watersheds (with rch data and wms capabilities) and set select_watershed options
-    app_workspace = app.get_app_workspace()
-    rch_path = os.path.join(app_workspace.path, 'rch_data')
+
+    rch_path = os.path.join(data_path)
     watershed_options = []
     watershed_list = os.listdir(rch_path)
     for f in watershed_list:
