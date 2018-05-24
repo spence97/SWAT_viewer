@@ -8,7 +8,7 @@ class swat(TethysAppBase):
 
     name = 'SWAT Data Viewer - Lower Mekong'
     index = 'swat:home'
-    icon = 'swat/images/swat_clipart.png'
+    icon = 'swat/images/logo.png'
     package = 'swat'
     root_url = 'swat'
     color = '#2c3e50'
