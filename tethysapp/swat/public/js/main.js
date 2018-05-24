@@ -386,6 +386,15 @@ function ajax_update_database(ajax_url, ajax_data) {
                             success: function (result) {
                                 console.log(result)
                                var parameters = [];
+                               if (parseFloat(result["features"].length < 1)) {
+                                    $('#error').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the data. Please try again</strong></p>');
+                                    $('#error').removeClass('hidden');
+                                    $loading.addClass('hidden')
+
+                                    setTimeout(function () {
+                                        $('#error').addClass('hidden')
+                                    }, 5000);
+                               }
                                var streamID = parseFloat(result["features"][0]["properties"]["Subbasin"]);
                                var watershed = $('#watershed_select').val();
                                var start = $('#start_pick').val();
