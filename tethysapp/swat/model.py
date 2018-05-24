@@ -2,14 +2,12 @@ from django.db import models
 import csv
 import os
 import datetime
-from .config import csv_path, ascii_path
+from .config import temp_workspace,
 
 
 
 def write_csv(streamID, parameters, dates, values, timestep):
-    # app_workspace = app.get_app_workspace()
-    # csv_path = os.path.join(app_workspace.path, 'download', 'swat_data.csv')
-    # csv_path = os.path.join('/Users/Student/tethys/src/tethys_apps/tethysapp/swat/public/data/swat_data.csv')
+    csv_path = os.path.join(temp_workspace, 'swat', 'swat_data.csv')
     try:
         os.remove(csv_path)
     except OSError:
@@ -38,9 +36,7 @@ def write_csv(streamID, parameters, dates, values, timestep):
 
 
 def write_ascii(streamID, parameters, dates, values, timestep):
-    # app_workspace = app.get_app_workspace()
-    # ascii_path = os.path.join(app_workspace.path, 'download', 'swat_data.txt')
-    # ascii_path = os.path.join('/Users/Student/tethys/src/tethys_apps/tethysapp/swat/public/data/swat_data.txt')
+    ascii_path = os.path.join(temp_workspace, 'swat', 'swat_data.txt')
     f = open(ascii_path, 'w+')
 
     f.write('StreamID: ' + str(streamID) + '\n')
