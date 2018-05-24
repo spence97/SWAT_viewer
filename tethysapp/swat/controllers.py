@@ -108,11 +108,11 @@ def timeseries(request):
 
 
     # Create a json object containing all necessary data to create timeseries plot in java script
-    dates = timeseries_dict['Dates']
-    values = timeseries_dict['Values']
-    timestep = timeseries_dict['Timestep']
-    write_csv(streamID, parameters, dates, values, timestep)
-    write_ascii(streamID, parameters, dates, values, timestep)
+    # dates = timeseries_dict['Dates']
+    # values = timeseries_dict['Values']
+    # timestep = timeseries_dict['Timestep']
+    # write_csv(streamID, parameters, dates, values, timestep)
+    # write_ascii(streamID, parameters, dates, values, timestep)
 
     # Return the json object back to main.js for timeseries plotting
     json_dict = JsonResponse(timeseries_dict)
