@@ -166,6 +166,7 @@ function ajax_update_database(ajax_url, ajax_data) {
         } else {
             monthOrDay = 'Monthly'
         }
+        console.log(watershed, start, end, parameters, streamID, monthOrDay)
 //      AJAX call to the timeseries python controller to run the rch data parser function
         $.ajax({
             type: 'POST',
@@ -179,12 +180,12 @@ function ajax_update_database(ajax_url, ajax_data) {
                 'monthOrDay': monthOrDay
             },
             error: function () {
-                $('#info').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the forecast</strong></p>');
-                $('#info').removeClass('hidden');
+                $('#error').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the data. Please try again</strong></p>');
+                $('#error').removeClass('hidden');
 
                 setTimeout(function () {
-                    $('#info').addClass('hidden')
-                }, 5000);
+                    $('#error').addClass('hidden')
+                }, 500);
             },
             success: function (data) {
 //              Take the resulting json object from the python function and plot it using the Highcharts API
