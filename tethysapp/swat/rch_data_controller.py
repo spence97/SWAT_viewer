@@ -38,10 +38,7 @@ def extract_monthly_rch(watershed, start, end, parameters, reachid):
                 paramstring = line.strip()
                 for i in range(0, len(paramstring)-1):
                     if paramstring[i].islower() and paramstring[i+1].isupper() and paramstring[i] != 'c':
-                        print(paramstring[i])
-                        print(paramstring[i+1])
                         paramstring = paramstring[0:i+1] + ' ' + paramstring[i+1:]
-                        print(paramstring)
                 param_vals = param_vals + paramstring.split()
                 for i in range(0,len(param_vals)-3):
                     if param_vals[i] == 'TOT':
