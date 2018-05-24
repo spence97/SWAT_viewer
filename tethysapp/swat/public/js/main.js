@@ -437,7 +437,14 @@ function ajax_update_database(ajax_url, ajax_data) {
                                get_time_series(watershed, start, end, parameters, streamID);
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                console.log(Error);
+
+                                $('#error').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the data. Please try again</strong></p>');
+                                $('#error').removeClass('hidden');
+                                $loading.addClass('hidden')
+
+                                setTimeout(function () {
+                                    $('#error').addClass('hidden')
+                                }, 5000);
                             }
                         }).done(function(value) {
 
