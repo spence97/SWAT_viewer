@@ -2,7 +2,7 @@ from django.db import models
 import csv
 import os
 import datetime
-from .config import temp_workspace,
+from .config import temp_workspace
 
 
 
