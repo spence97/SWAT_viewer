@@ -3,6 +3,7 @@ from datetime import datetime
 import pandas as pd
 import os
 from .app import swat as app
+from .config import data_path
 
 param_names = {'':'', 'RCH':'Reach', 'GIS':'GIS',  'MO':'Month', 'DA':'Day', 'YR':'Year', 'AREAkm2':'Area (km2)',
                'FLOW_INcms':'Inflow (cms)', 'FLOW_OUTcms':'Outflow (cms)', 'EVAPcms':'Evaporation (cms)',
@@ -28,8 +29,8 @@ param_names = {'':'', 'RCH':'Reach', 'GIS':'GIS',  'MO':'Month', 'DA':'Day', 'YR
                }
 def extract_monthly_rch(watershed, start, end, parameters, reachid):
 
-    app_workspace = app.get_app_workspace()
-    monthly_rch_path = os.path.join(app_workspace.path, 'rch_data', watershed, 'output_monthly.rch')
+
+    monthly_rch_path = os.path.join(data_path, watershed, 'output_monthly.rch')
     param_vals = ['']
     with open(monthly_rch_path) as f:
         for line in f:
@@ -47,10 +48,6 @@ def extract_monthly_rch(watershed, start, end, parameters, reachid):
                         new_val = param_vals[i]+param_vals[i+1]
                         param_vals[i] = new_val
                         param_vals.pop(i+1)
-                    # if param_vals[i] == 'NO3Conc':
-                    #     new_val = param_vals[i] + param_vals[i+1]
-                    #     param_vals[i] = new_val
-                    #     param_vals.pop(i+1)
                 break
     print(param_vals)
 
@@ -115,24 +112,25 @@ def extract_monthly_rch(watershed, start, end, parameters, reachid):
 
 def extract_daily_rch(watershed, start, end, parameters, reachid):
 
-    app_workspace = app.get_app_workspace()
-    daily_rch_path = os.path.join(app_workspace.path, 'rch_data', watershed, 'output_daily.rch')
+    daily_rch_path = os.path.join(data_path, watershed, 'output_daily.rch')
 
     param_vals = ['']
     with open(daily_rch_path) as f:
         for line in f:
             if 'RCH' in line:
-                param_vals = param_vals + line.strip().split()
+                paramstring = line.strip()
+                for i in range(0, len(paramstring)-1):
+                    if paramstring[i].islower() and paramstring[i+1].isupper() and paramstring[i] != 'c':
+                        paramstring = paramstring[0:i+1] + ' ' + paramstring[i+1:]
+                param_vals = param_vals + paramstring.split()
+                for i in range(0,len(param_vals)-3):
+                    if param_vals[i] == 'TOT':
+                        new_val = param_vals[i]+param_vals[i+1]
+                        param_vals[i] = new_val
+                        param_vals.pop(i+1)
+
                 break
-
     print(param_vals)
-
-    param_names = ['', 'Reach', 'GIS', 'Month', 'Day', 'Year', 'Area (km2)', 'Inflow (cms)', 'Outflow (cms)',
-                   'Evaporation (cms)', 'Transpiration Loss (cms)', 'Sediment Inflow (tons)', 'Sediment Outflow (tons)',
-                   'Sediment Concentration (mg/kg)', 'Organic Nitrogen Inflow (kg)', 'Organic Nitrogen Outflow (kg)',
-                   'Organic Phosphorus Inflow (kg)', 'Organic Phosphorus Outflow (kg)', 'Nitrate Inflow (kg)',
-                   'Nitrate Outflow (kg)'
-                   ]
 
     dt_start = datetime.strptime(start, '%B %d, %Y')
     start_index = dt_start.timetuple().tm_yday
@@ -152,7 +150,7 @@ def extract_daily_rch(watershed, start, end, parameters, reachid):
     for x in range(0, len(parameters)):
 
         param_index = param_vals.index(parameters[x])
-        param_name = param_names[param_index]
+        param_name = param_names[parameters[x]]
 
         data = []
         f = open(daily_rch_path)

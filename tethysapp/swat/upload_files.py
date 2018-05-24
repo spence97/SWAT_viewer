@@ -2,15 +2,14 @@ from tethys_sdk.services import get_spatial_dataset_engine
 import os
 from shutil import copyfile
 from .app import swat as app
-from .config import temp_workspace
+from .config import temp_workspace, data_path
 
 WORKSPACE = 'swat'
 GEOSERVER_URI = 'http://www.example.com/swat'
 
 def save_files(id):
 
-    app_workspace = app.get_app_workspace()
-    rch_path = os.path.join(app_workspace.path, 'rch_data', id)
+    rch_path = os.path.join(data_path, id)
     temp_path = temp_workspace
     temp_files = os.listdir(temp_path)
 
