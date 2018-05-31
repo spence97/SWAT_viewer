@@ -7,7 +7,7 @@ from .config import data_path
 
 param_names = {'':'', 'RCH':'Reach', 'GIS':'GIS',  'MO':'Month', 'DA':'Day', 'YR':'Year', 'AREAkm2':'Area (km2)',
                'FLOW_INcms':'Inflow (cms)', 'FLOW_OUTcms':'Outflow (cms)', 'EVAPcms':'Evaporation (cms)',
-               'TLOSS':'Transpiration Loss (cms)', 'SED_INtons':'Sediment Inflow (tons)', 'SED_OUTtons':'Sediment Outflow (tons)',
+               'TLOSScms':'Transpiration Loss (cms)', 'SED_INtons':'Sediment Inflow (tons)', 'SED_OUTtons':'Sediment Outflow (tons)',
                'SEDCONCmg/kg':'Sediment Concentration (mg/kg)', 'ORGN_INkg':'Organic Nitrogen Inflow (kg)',
                'ORGN_OUTkg':'Organic Nitrogen Outflow (kg)', 'ORGP_INkg':'Organic Phosphorus Inflow (kg)',
                'ORGP_OUTkg':'Organic Phosphorus Outflow (kg)', 'NO3_INkg':'Nitrate Inflow (kg)','NO3_OUTkg':'Nitrate Outflow (kg)',
