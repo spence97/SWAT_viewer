@@ -64,7 +64,7 @@ def home(request):
                                options=[('Stream Inflow (cms)', 'FLOW_INcms'),
                                         ('Stream Outflow (cms)', 'FLOW_OUTcms'),
                                         ('Evaporation (cms)', 'EVAPcms'),
-                                        ('Transpiration Loss (cms)', 'TLOSS'),
+                                        ('Transpiration Loss (cms)', 'TLOSScms'),
                                         ('Organic Nitrogen Inflow (kg)', 'ORGN_INkg'),
                                         ('Organic Nitrogen Outflow (kg)', 'ORGN_OUTkg'),
                                         ('Organic Phosphorus Inflow (kg)', 'ORGP_INkg'),
