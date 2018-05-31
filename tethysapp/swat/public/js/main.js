@@ -674,8 +674,8 @@ $(function() {
         console.log('rendering page');
         $(".monthDayToggle").change(function(){
             update_dates();
-            map.removeLayer(featureOverlaySubbasin)
-            map.removeLayer(featureOverlayStream)
+            map.removeLayer(featureOverlaySubbasin);
+            map.removeLayer(featureOverlayStream);
         });
         $("#upload").click(function() {
             $("#upload-modal").modal('show');
@@ -683,11 +683,15 @@ $(function() {
         $("#watershed_select").change(function(){
             map.removeLayer(basin_layer);
             map.removeLayer(streams_layer);
-            map.removeLayer(featureOverlaySubbasin)
-            map.removeLayer(featureOverlayStream)
+            map.removeLayer(featureOverlaySubbasin);
+            map.removeLayer(featureOverlayStream);
             add_basins();
             add_streams();
         });
+        $(".form-group").change(function(){
+            map.removeLayer(featureOverlaySubbasin);
+            map.removeLayer(featureOverlayStream);
+        })
     });
 
 
