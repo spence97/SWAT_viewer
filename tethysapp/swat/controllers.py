@@ -100,10 +100,10 @@ def home(request):
                                         ('Conservative metal #1 Outflow (kg)','CMETAL#1kg'),
                                         ('Conservative Metal #2 Outflow (kg)','CMETAL#2kg'),
                                         ('Conservative Metal #3 Outflow (kg)','CMETAL#3kg'),
-                                        ('Total Nitrogen (kg)','TOT Nkg'),
-                                        ('Total Phosphourus (kg)','TOT Pkg'),
+                                        ('Total Nitrogen (kg)','TOTNkg'),
+                                        ('Total Phosphourus (kg)','TOTPkg'),
                                         ('Nitrate Concentration (mg/l)','NO3ConcMg/l'),
-                                        ('Water Temperature (deg C)','WTEMPdegc')
+                                        ('Water Temperature (deg C)','WTMPdegc')
                                         ],
                                select2_options={'placeholder': 'Select a Parameter to View',
                                                 'allowClear': False},

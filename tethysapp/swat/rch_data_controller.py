@@ -24,8 +24,8 @@ param_names = {'':'', 'RCH':'Reach', 'GIS':'GIS',  'MON':'Month', 'DA':'Day', 'Y
                'REACBEDPSTmg':'Loss of Pesticide from River Bed by Reaction (mg)', 'BURYPSTmg':'Loss of Pesticide from River Bed by Buryial (mg)',
                'BED_PSTmg':'Pesticide in River Bed Sediment (mg)', 'BACTP_OUTct':'Persistent Bacterial Outflow (count)',
                'BACTLP_OUT':'Less Persistent Bacterial Outflow (count)', 'CMETAL#1kg':'Conservative metal #1 Outflow (kg)',
-               'CMETAL#2kg': 'Conservative Metal #2 Outflow (kg)', 'CMETAL#3kg':'Conservative Metal #3 Outflow (kg)', 'TOT Nkg':'Total Nitrogen (kg)',
-               'TOT Pkg':'Total Phosphourus (kg)', 'NO3ConcMg/l':'Nitrate Concentration (mg/l)','WTEMPdegc':'Water Temperature (deg C)'
+               'CMETAL#2kg': 'Conservative Metal #2 Outflow (kg)', 'CMETAL#3kg':'Conservative Metal #3 Outflow (kg)', 'TOTNkg':'Total Nitrogen (kg)',
+               'TOTPkg':'Total Phosphourus (kg)', 'NO3ConcMg/l':'Nitrate Concentration (mg/l)','WTMPdegc':'Water Temperature (deg C)'
                }
 def extract_monthly_rch(watershed, start, end, parameters, reachid):
 

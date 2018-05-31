@@ -186,7 +186,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                 setTimeout(function () {
                     $('#error').addClass('hidden')
-                }, 5000);
+                }, 20000);
             },
             success: function (data) {
 //              Take the resulting json object from the python function and plot it using the Highcharts API
