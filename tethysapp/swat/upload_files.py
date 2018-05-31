@@ -26,7 +26,7 @@ def save_files(id):
             '''
             Check to see if shapefile is on geoserver. If not, upload it.
             '''
-            geoserver_engine = get_spatial_dataset_engine(name='default')
+            geoserver_engine = get_spatial_dataset_engine(name='byu')
             response = geoserver_engine.get_layer(file, debug=True)
             if response['success'] == False:
 
