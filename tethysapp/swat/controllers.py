@@ -123,14 +123,13 @@ def upload_files(request):
     """
     Controller to upload new temp and .rch data files to app server and publish to geoserver
     """
-    app_workspace = app.get_app_workspace()
-    rch_path = os.path.join(app_workspace.path, 'rch_data')
+
 
     if request.method == 'POST':
         form = UploadWatershedForm(request.POST, request.FILES)
         watershed_name = request.POST['watershed_name']
         watershed_name = watershed_name.replace(' ', '_').lower()
-        new_dir = os.path.join(rch_path, watershed_name)
+        new_dir = os.path.join(data_path, watershed_name)
         if form.is_valid():
             form.save()
             os.makedirs(new_dir)
