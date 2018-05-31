@@ -365,7 +365,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
                     $loading = $('#view-file-loading');
                     $loading.removeClass('hidden');
-                    if ($('#error').hasClass('hidden')) {
+                    if (!$('#error').hasClass('hidden')) {
                         $('#error').addClass('hidden')
                     }
                     $("#ts-modal").modal('show');
