@@ -672,7 +672,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 $(function() {
         init_all();
         $("#start_pick").attr("autocomplete","off")
-        $("#end_pick").attr("autocomplet","off")
+        $("#end_pick").attr("autocomplete","off")
         $(".monthDayToggle").change(function(){
             update_dates();
             map.removeLayer(featureOverlaySubbasin);
