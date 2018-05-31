@@ -93,7 +93,7 @@ def home(request):
                                         ('Resuspension of Pesticide from River Bed to Water (mg)','RESUSP_PSTmg'),
                                         ('Diffusion of Pesticide from Water to River Bed Sediment (mg)','DIFFUSEPSTmg'),
                                         ('Loss of Pesticide from River Bed by Reaction (mg)','REACBEDPSTmg'),
-                                        ('Loss of Pesticide from River Bed by Buryial (mg)','BURYPSTmg'),
+                                        ('Loss of Pesticide from River Bed by Burial (mg)','BURYPSTmg'),
                                         ('Pesticide in River Bed Sediment (mg)','BED_PSTmg'),
                                         ('Persistent Bacterial Outflow (count)','BACTP_OUTct'),
                                         ('Less Persistent Bacterial Outflow (count)','BACTLP_OUT'),
@@ -147,7 +147,8 @@ def timeseries(request):
         timeseries_dict = extract_daily_rch(watershed, start, end, parameters, streamID)
 
 
-    # Create a json object containing all necessary data to create timeseries plot in java script
+    # # Call functions to create csv and ascii files for the selected timeseries
+    #
     # dates = timeseries_dict['Dates']
     # values = timeseries_dict['Values']
     # timestep = timeseries_dict['Timestep']

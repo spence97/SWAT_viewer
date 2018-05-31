@@ -21,7 +21,7 @@ param_names = {'':'', 'RCH':'Reach', 'GIS':'GIS',  'MON':'Month', 'DA':'Day', 'Y
                'SORPST_OUTmg':'Pesticide Sorbed to Sediment Transport Outflow (mg)', 'REACTPSTmg':'Loss of Pesticide from Water by Reaction (mg)',
                'VOLPSTmg':'Loss of Pesticide from Water by Volatilization (mg)', 'SETTLPSTmg':'Pesticide Transfer from Water to River Bed Sediment (mg)',
                'RESUSP_PSTmg':'Resuspension of Pesticide from River Bed to Water (mg)', 'DIFFUSEPSTmg':'Diffusion of Pesticide from Water to River Bed Sediment (mg)',
-               'REACBEDPSTmg':'Loss of Pesticide from River Bed by Reaction (mg)', 'BURYPSTmg':'Loss of Pesticide from River Bed by Buryial (mg)',
+               'REACBEDPSTmg':'Loss of Pesticide from River Bed by Reaction (mg)', 'BURYPSTmg':'Loss of Pesticide from River Bed by Burial (mg)',
                'BED_PSTmg':'Pesticide in River Bed Sediment (mg)', 'BACTP_OUTct':'Persistent Bacterial Outflow (count)',
                'BACTLP_OUT':'Less Persistent Bacterial Outflow (count)', 'CMETAL#1kg':'Conservative metal #1 Outflow (kg)',
                'CMETAL#2kg': 'Conservative Metal #2 Outflow (kg)', 'CMETAL#3kg':'Conservative Metal #3 Outflow (kg)', 'TOTNkg':'Total Nitrogen (kg)',
