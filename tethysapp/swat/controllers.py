@@ -102,7 +102,7 @@ def home(request):
                                         ('Conservative Metal #3 Outflow (kg)','CMETAL#3kg'),
                                         ('Total Nitrogen (kg)','TOT Nkg'),
                                         ('Total Phosphourus (kg)','TOT Pkg'),
-                                        ('Nitrate Concentration (mg/l)','NO3ConcMg/l')
+                                        ('Nitrate Concentration (mg/l)','NO3ConcMg/l'),
                                         ('Water Temperature (deg C)','WTEMPdegc')
                                         ],
                                select2_options={'placeholder': 'Select a Parameter to View',
