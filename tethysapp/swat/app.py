@@ -38,6 +38,16 @@ class swat(TethysAppBase):
                 name='upload_files',
                 url='swat/upload',
                 controller='swat.controllers.upload_files'
+            ),
+            UrlMap(
+                name='download_csv',
+                url='swat/download_csv',
+                controller='swat.controllers.download_csv'
+            ),
+            UrlMap(
+                name='download_ascii',
+                url='swat/download_ascii',
+                controller='swat.controllers.download_ascii'
             )
         )
 

@@ -1,12 +1,14 @@
 from django.shortcuts import *
 from tethys_sdk.gizmos import *
+from django.core.files import File
 from django.http import JsonResponse, HttpResponseRedirect
+from django.core.files import File
 from .rch_data_controller import extract_monthly_rch, extract_daily_rch
 from .model import write_csv, write_ascii
 from .app import swat as app
 from .forms import UploadWatershedForm
 from .upload_files import save_files
-from .config import data_path
+from .config import data_path, temp_workspace
 import os
 
 def home(request):
@@ -148,7 +150,6 @@ def timeseries(request):
 
 
     # # Call functions to create csv and ascii files for the selected timeseries
-    #
     dates = timeseries_dict['Dates']
     values = timeseries_dict['Values']
     timestep = timeseries_dict['Timestep']
@@ -179,3 +180,27 @@ def upload_files(request):
         return HttpResponseRedirect('../home/')
     else:
         return HttpResponseRedirect('../home/')
+
+def download_csv(request):
+    """
+    Controller to download csv file
+    """
+
+    path_to_file = os.path.join(temp_workspace,'swat_data.csv')
+    f = open(path_to_file, 'r')
+    myfile = File(f)
+    response = HttpResponse(myfile, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=swat_data.csv'
+    return response
+
+def download_ascii(request):
+    """
+    Controller to download csv file
+    """
+
+    path_to_file = os.path.join(temp_workspace,'swat_data.txt')
+    f = open(path_to_file, 'r')
+    myfile = File(f)
+    response = HttpResponse(myfile, content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename=swat_data.txt'
+    return response
