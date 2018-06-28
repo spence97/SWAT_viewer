@@ -1,7 +1,7 @@
 import xml.etree.cElementTree as ET
 import os
 import datetime
-from .config import data_path
+from .config import data_path, watershed_xml_path
 
 def write_xml(id):
     rch_dir = os.path.join(data_path, id)
@@ -95,9 +95,10 @@ def write_xml(id):
     day_params = ', '.join(x for x in day_param_vals)
 
 
-    et = ET.parse(data_path + '/watershed_info.xml')
-    watershed = ET.SubElement(et.getroot(), id)
+    et = ET.parse(watershed_xml_path)
+    watershed = ET.SubElement(et.getroot(), 'watershed')
 
+    ET.SubElement(watershed, "name").text = id
     ET.SubElement(watershed, "month_start_date").text = month_start_date
     ET.SubElement(watershed, "month_end_date").text = month_end_date
     ET.SubElement(watershed, "month_params").text = month_params
@@ -106,7 +107,7 @@ def write_xml(id):
     ET.SubElement(watershed, "day_params").text = day_params
 
     tree = ET.ElementTree(et.getroot())
-    tree.write(data_path + '/watershed_info.xml')
+    tree.write(watershed_xml_path)
 
 
 

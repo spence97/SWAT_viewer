@@ -45,8 +45,9 @@ def home(request):
                                    multiple=False,
                                    original=False,
                                    options=watershed_options,
-                                   select2_options={'placeholder': 'Select a Watershed to View',
-                                                    'allowClear': False},
+                                   initial=[('Lower Mekong', 'lower_mekong')],
+                                   # select2_options={'placeholder': 'Select a Watershed to View',
+                                   #                  'allowClear': False},
                                    )
 
     start_pick = DatePicker(name='start_pick',
@@ -244,3 +245,7 @@ def download_ascii(request):
     response = HttpResponse(myfile, content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename=swat_data.txt'
     return response
+
+
+
+

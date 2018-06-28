@@ -1,34 +1,15 @@
-import csv
-import os
-import datetime
+import xml.etree.cElementTree as ET
 
-def write_csv(streamID, parameters, dates, values, timestep):
-    # app_workspace = app.get_app_workspace()
-    # csv_path = os.path.join(app_workspace.path, 'download', 'swat_data.csv')
-    csv_path = os.path.join('/Users/Student/tethys/src/tethys_apps/tethysapp/swat/public/data/swat_data.csv')
-    try:
-        os.remove(csv_path)
-    except OSError:
-        pass
+et = ET.parse('/Users/Student/Documents/tethysdev/tethysapp-swat/tethysapp/swat/public/watershed_data/watershed_info.xml')
+watershed = ET.SubElement(et.getroot(), 'watershed')
 
-    fieldnames = ['UTC Offset (millisec)', 'Date']
-    fieldnames.extend(parameters)
+ET.SubElement(watershed, "name").text = "red_river"
+ET.SubElement(watershed, "month_start_date").text = 'January 2005'
+ET.SubElement(watershed, "month_end_date").text = 'December 2015'
+ET.SubElement(watershed, "month_params").text = 'FLOW_INcms, FLOW_OUTcms'
+ET.SubElement(watershed, "day_start_date").text = 'January 01, 2011'
+ET.SubElement(watershed, "day_end_date").text = 'January 02, 2011'
+ET.SubElement(watershed, "day_params").text = 'FLOW_INcms, FLOW_OUTcms'
 
-    with open(csv_path, 'w') as csvfile:
-        fieldnames = fieldnames
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        writer.writeheader()
-        for i in range(0, len(dates)):
-            if timestep == 'Monthly':
-                row_dict = {fieldnames[0]: values[0][i][0]/1000, fieldnames[1]: datetime.datetime.strptime(dates[i], '%b %y').strftime('%-m/%Y')}
-            else:
-                row_dict = {fieldnames[0]: values[0][i][0]/1000, fieldnames[1]: datetime.datetime.strptime(dates[i], '%b %d, %Y').strftime('%-m/%d/%Y')}
-            for j in range(0,len(parameters)):
-                param = parameters[j]
-                row_dict[param] = values[j][i][1]
-            writer.writerow(row_dict)
-
-
-
-write_csv(182, [u'FLOW_INcms', u'ORGP_INkg'], ['Jan 2009', 'Feb 20'], {0: [[1293840000000, 1.663e-05], [1293926400000, 1.663e-05]], 1: [[1293840000000, 0.0004311], [1293926400000, 0.0004311]]}, 'Monthly')
+tree = ET.ElementTree(et.getroot())
+tree.write('/Users/Student/Documents/tethysdev/tethysapp-swat/tethysapp/swat/public/watershed_data/watershed_info.xml')

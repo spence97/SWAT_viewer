@@ -54,6 +54,7 @@ class swat(TethysAppBase):
                 url='swat/download_ascii',
                 controller='swat.controllers.download_ascii'
             )
+
         )
 
         return url_maps

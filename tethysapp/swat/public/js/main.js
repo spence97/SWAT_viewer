@@ -45,7 +45,7 @@ var LIBRARY_OBJECT = (function() {
         init_events,
         init_all,
         get_time_series,
-        update_dates,
+        update_selectors,
         init_map,
         downloadCsv,
         downloadAscii,
@@ -413,7 +413,6 @@ function ajax_update_database(ajax_url, ajax_data) {
                             url: wms_url,
                             dataType: 'json',
                             success: function (result) {
-                                console.log(result)
                                var parameters = [];
                                if (parseFloat(result["features"].length < 1)) {
                                     $('#error').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the data. Please try again</strong></p>');
@@ -537,21 +536,17 @@ function ajax_update_database(ajax_url, ajax_data) {
                     var parser = new ol.format.WMSCapabilities();
                     var result = parser.read(xml);
                     var layers = result['Capability']['Layer']['Layer']
-                    console.log(layers)
                     for (var i=0; i<layers.length; i++) {
                         if(layers[i].Title == store + '-subbasin') {
                             layer_xml = xml.getElementsByTagName('Layer')[i+1]
                             layerParams = layers[i]
-                            console.log(layerParams)
                         }
                     }
 
                     srs = layer_xml.getElementsByTagName('SRS')[0].innerHTML
                     bbox = layerParams.BoundingBox[0].extent
-                    console.log(srs, bbox)
                     var new_extent = ol.proj.transformExtent(bbox, srs, 'EPSG:4326');
                     var center = ol.extent.getCenter(new_extent)
-                    console.log(center)
                     var view = new ol.View({
                         center: center,
                         projection: 'EPSG:4326',
@@ -640,23 +635,45 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     }
 
-    init_all = function(){
-        init_map();
-        init_events();
-        add_basins();
-        add_streams();
-    };
+
 
 
 //  When the Monthly/Daily toggle is clicked, update the datepickers to show only available options
-    update_dates = function() {
+    function loadXMLDoc() {
         var request = new XMLHttpRequest();
-        request.open('GET', '')
+        request.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                update_selectors(this);
+            }
+        };
+        request.open("GET", "/static/swat/watershed_data/watershed_info.xml", true);
+        request.send();
+    };
+
+
+    update_selectors = function(xml) {
+        var watershed, xmlDoc, x, i, watershed_num, start_date, end_date, params_list
+        watershed = $('#watershed_select option:selected').val()
+        xmlDoc = xml.responseXML;
+        x = xmlDoc.getElementsByTagName('watershed');
+        for (i = 0; i< x.length; i++) {
+            var watershed_name = x[i].childNodes[0].innerHTML
+            if (String(watershed_name) === String(watershed)) {
+                watershed_num = i
+                console.log(watershed_num)
+            }
+        }
+
+
         if($(".toggle").hasClass( "off")) {
+            start_date = xmlDoc.getElementsByTagName("day_start_date")[watershed_num].innerHTML
+            console.log(start_date)
+            end_date = xmlDoc.getElementsByTagName("day_end_date")[watershed_num].innerHTML
+            console.log(end_date)
             var options = {
                 format: 'MM d, yyyy',
-                startDate: 'January 1, 2001',
-                endDate: 'December 31, 2015',
+                startDate: start_date,
+                endDate: end_date,
                 startView: 'decade',
                 minViewMode: 'days',
                 orientation: 'bottom auto'
@@ -667,10 +684,14 @@ function ajax_update_database(ajax_url, ajax_data) {
                 $(this).datepicker(options);
             });
         } else {
+            start_date = xmlDoc.getElementsByTagName("month_start_date")[watershed_num].innerHTML;
+            console.log(start_date)
+            end_date = xmlDoc.getElementsByTagName("month_end_date")[watershed_num].innerHTML;
+            console.log(end_date)
             var options = {
                 format: 'MM yyyy',
-                startDate: 'January 2005',
-                endDate: 'December 2015',
+                startDate: start_date,
+                endDate: end_date,
                 startView: 'decade',
                 minViewMode: 'months',
                 orientation: 'bottom auto'
@@ -685,6 +706,14 @@ function ajax_update_database(ajax_url, ajax_data) {
         $('#end_pick').attr('placeholder', 'End Date')
 
     }
+
+    init_all = function(){
+        init_map();
+        init_events();
+        add_basins();
+        add_streams();
+        loadXMLDoc();
+    };
 
 
     /************************************************************************
@@ -708,7 +737,7 @@ $(function() {
         $("#end_pick").attr("autocomplete","off")
         $("#id_watershed_name").attr("autocomplete","off")
         $(".monthDayToggle").change(function(){
-            update_dates();
+            loadXMLDoc();
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
         });
@@ -716,6 +745,7 @@ $(function() {
 //            $("#upload-modal").modal('show');
 //        });
         $("#watershed_select").change(function(){
+            loadXMLDoc();
             map.removeLayer(basin_layer);
             map.removeLayer(streams_layer);
             map.removeLayer(featureOverlaySubbasin);
