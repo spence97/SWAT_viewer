@@ -54,6 +54,7 @@ def write_ascii(watershed, streamID, parameters, dates, values, timestep):
     ascii_path = os.path.join(temp_workspace, 'swat_data.txt')
     f = open(ascii_path, 'w+')
 
+    f.write('Watershed:' + str(watershed) + '\n')
     f.write('StreamID: ' + str(streamID) + '\n')
 
     param_str = ','.join(str(param) for param in parameters).replace(',', ', ')

@@ -313,29 +313,6 @@ function ajax_update_database(ajax_url, ajax_data) {
         });
     };
 
-    downloadCsv = function (){
-        var watershed = $('#watershed_select option:selected').val();
-        var parameter = $('#param_select option:selected').val();
-        var start = $('#start_pick').val();
-        var end = $('#end_pick').val();
-        var streamID = $('.highcharts-subtitle').text().split(',')[0].split(':')[1].replace( /\s/g, '');
-        console.log(watershed, streamID, parameter, start, end)
-        $.ajax({
-                type: 'POST',
-                url: '/apps/swat/download_csv/',
-                dataType: 'json',
-                data: {
-                    'watershed': watershed,
-                    'streamID': streamID,
-                    'parameter': parameter,
-                    'start': start,
-                    'end': end,
-                },
-            }).done(function() {
-
-            })
-
-    }
 
     init_events = function(){
 //      Initialize all map interactions
@@ -756,9 +733,6 @@ $(function() {
         $(".form-group").change(function(){
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
-        })
-        $("#submit-download-csv").click(function() {
-            downloadCsv()
         })
     });
 

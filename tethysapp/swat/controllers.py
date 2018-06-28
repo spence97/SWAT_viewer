@@ -210,21 +210,6 @@ def download_csv(request):
     """
     Controller to download csv file
     """
-    # watershed = request.POST.get('watershed')
-    # start = request.POST.get('start')
-    # end = request.POST.get(str('end'))
-    # parameter = request.POST.getlist('parameter')
-    # streamID = request.POST.get('streamID')
-    #
-    # print(watershed, start, end, parameter, streamID)
-    #
-    # param_str = '&'.join(parameter).lower()
-    # param_str = ''.join(param_str.split('_'))
-    #
-    # watershed = ''.join(watershed.split('_'))
-    #
-    # file_name = 'SWAT_' + watershed + '_rch' + streamID + '_' + param_str
-    # print(file_name)
 
     path_to_file = os.path.join(temp_workspace, 'swat_data.csv')
     f = open(path_to_file, 'r')
@@ -236,7 +221,7 @@ def download_csv(request):
 
 def download_ascii(request):
     """
-    Controller to download csv file
+    Controller to download ascii file
     """
 
     path_to_file = os.path.join(temp_workspace,'swat_data.txt')
