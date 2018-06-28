@@ -23,6 +23,8 @@ def home(request):
     for f in watershed_list:
         if f.startswith('.'):
             pass
+        elif f.endswith('.xml'):
+            pass
         else:
             name = f.replace('_', ' ').title()
             value = f
@@ -38,6 +40,14 @@ def home(request):
     format = 'MM yyyy'
     startView = 'decade'
     minView = 'months'
+
+    watershed_select = SelectInput(name='watershed_select',
+                                   multiple=False,
+                                   original=False,
+                                   options=watershed_options,
+                                   select2_options={'placeholder': 'Select a Watershed to View',
+                                                    'allowClear': False},
+                                   )
 
     start_pick = DatePicker(name='start_pick',
                             autoclose=True,
@@ -111,13 +121,7 @@ def home(request):
                                                 'allowClear': False},
                                )
 
-    watershed_select = SelectInput(name='watershed_select',
-                               multiple=False,
-                               original=False,
-                               options=watershed_options,
-                               select2_options={'placeholder': 'Select a Watershed to View',
-                                                'allowClear': False},
-                               )
+
 
     context = {
         'start_pick': start_pick,
@@ -153,12 +157,29 @@ def timeseries(request):
     dates = timeseries_dict['Dates']
     values = timeseries_dict['Values']
     timestep = timeseries_dict['Timestep']
-    write_csv(streamID, parameters, dates, values, timestep)
-    write_ascii(streamID, parameters, dates, values, timestep)
+    write_csv(watershed, streamID, parameters, dates, values, timestep)
+    write_ascii(watershed, streamID, parameters, dates, values, timestep)
 
     # Return the json object back to main.js for timeseries plotting
     json_dict = JsonResponse(timeseries_dict)
     return (json_dict)
+
+def add_watershed(request):
+    """
+    Controller for the Add Watershed page.
+    """
+
+    # pass the upload watershed form into the view so it can be shown in the web page
+    watershedform = UploadWatershedForm()
+
+
+
+    context = {
+        'watershedform': watershedform
+    }
+
+    return render(request, 'swat/add_watershed.html', context)
+
 
 def upload_files(request):
 
@@ -174,8 +195,11 @@ def upload_files(request):
         new_dir = os.path.join(data_path, watershed_name)
         if form.is_valid():
             form.save()
+            print('form saved')
             os.makedirs(new_dir)
+            print('new_dir created')
             save_files(watershed_name)
+            print('save_files completed')
 
         return HttpResponseRedirect('../home/')
     else:
@@ -185,10 +209,26 @@ def download_csv(request):
     """
     Controller to download csv file
     """
+    # watershed = request.POST.get('watershed')
+    # start = request.POST.get('start')
+    # end = request.POST.get(str('end'))
+    # parameter = request.POST.getlist('parameter')
+    # streamID = request.POST.get('streamID')
+    #
+    # print(watershed, start, end, parameter, streamID)
+    #
+    # param_str = '&'.join(parameter).lower()
+    # param_str = ''.join(param_str.split('_'))
+    #
+    # watershed = ''.join(watershed.split('_'))
+    #
+    # file_name = 'SWAT_' + watershed + '_rch' + streamID + '_' + param_str
+    # print(file_name)
 
-    path_to_file = os.path.join(temp_workspace,'swat_data.csv')
+    path_to_file = os.path.join(temp_workspace, 'swat_data.csv')
     f = open(path_to_file, 'r')
     myfile = File(f)
+
     response = HttpResponse(myfile, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=swat_data.csv'
     return response

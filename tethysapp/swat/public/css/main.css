@@ -10,13 +10,18 @@
     width: 0%;
 }
 
+#app-content-wrapper #app-content #app-navigation .nav li a {
+}
+
 #view-file-loading {
   display: flex;
   justify-content: center;
 }
+
 #ts-modal {
     height: 100%
 }
+
 #ts-modal .modal-dialog {
   top: 8%;
   width: 55%;
@@ -57,17 +62,21 @@
     float: left;
 }
 
+.nasaaccess {
+    margin-right: 15px;
+}
+
 #paramSelect {
     min-width: 100%;
     margin-top: 12px;
 }
 
 .input-daterange {
-    margin-top: 15px;
 }
 
 
 #start_pick{
+    margin-top: 0px !important;
     font-size: 11px;
     border-top-left-radius: 5px !important;
     border-bottom-left-radius: 5px !important;
@@ -106,5 +115,37 @@
     padding: 0
 }
 
+.form-container {
+    float: left;
+    background-color: rgba(0, 9, 112, .2);
+    width: 25%;
+    height: 100%;
+    padding: 10px;
+    margin: auto;
+}
+
+.instructions-container {
+    background-color: rgba(214, 214, 214, 0);
+    height: 100% !important;
+    width: 75% !important;
+    padding-left: 1% !important;
+    padding-top: 1%;
+    float: right;
+}
+
+input[type="file"] {
+    padding: 2%;
+    padding-left: 2px !important;
+}
+
+input[type="text"] {
+    border-radius: 10px;
+    margin-right: 50%;
+    margin-top: 2%;
+}
+
+input[type="submit"] {
+
+}
 
 

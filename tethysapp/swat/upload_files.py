@@ -3,6 +3,7 @@ import os
 from shutil import copyfile
 from .app import swat as app
 from .config import temp_workspace, data_path
+from watersheds_xml import write_xml
 
 WORKSPACE = 'swat'
 GEOSERVER_URI = 'http://www.example.com/swat'
@@ -10,10 +11,17 @@ GEOSERVER_URI = 'http://www.example.com/swat'
 def save_files(id):
 
     rch_path = os.path.join(data_path, id)
+    print(rch_path)
     temp_path = temp_workspace
+    print(temp_path)
     temp_files = os.listdir(temp_path)
+    print(temp_files)
 
     for file in temp_files:
+        if file.endswith('Store'):
+            temp_file_path = os.path.join(temp_path, file)
+            os.remove(temp_file_path)
+            print('.DS_Store file removed')
         if file.endswith('.rch'):
             print('saving file to app workspace')
             temp_file_path = os.path.join(temp_path, file)
@@ -26,7 +34,7 @@ def save_files(id):
             '''
             Check to see if shapefile is on geoserver. If not, upload it.
             '''
-            geoserver_engine = get_spatial_dataset_engine(name='default')
+            geoserver_engine = get_spatial_dataset_engine(name='ADPC')
             response = geoserver_engine.get_layer(file, debug=True)
             if response['success'] == False:
 
@@ -41,9 +49,9 @@ def save_files(id):
                 zip_archive = temp_file_path
 
                 # Upload shapefile to the workspaces
-                if 'reach' in file or 'drainageline' in file or 'stream' in file or 'river' in file:
+                if '-reach' in file or '-drainageline' in file or '-stream' in file:
                     store = id + '-reach'
-                elif 'subbasin' in file or 'catch' in file or 'boundary' in file:
+                elif '-subbasin' in file or '-catch' in file or '-boundary' in file:
                     store = id + '-subbasin'
                 print(store)
                 store_id = WORKSPACE + ':' + store
@@ -54,3 +62,5 @@ def save_files(id):
                     overwrite=True
                 )
             os.remove(temp_file_path)
+
+    write_xml(id)

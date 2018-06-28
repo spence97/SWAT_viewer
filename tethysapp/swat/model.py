@@ -6,7 +6,22 @@ from .config import temp_workspace
 
 
 
-def write_csv(streamID, parameters, dates, values, timestep):
+def write_csv(watershed, streamID, parameters, dates, values, timestep):
+    # param_str = '&'.join(parameters).lower()
+    # param_str = ''.join(param_str.split('_'))
+    #
+    # watershed = ''.join(watershed.split('_'))
+    #
+    # if timestep == 'Monthly':
+    #     start = datetime.datetime.strptime(dates[0], '%b %y').strftime('%m%Y')
+    #     end = datetime.datetime.strptime(dates[-1], '%b %y').strftime('%m%Y')
+    # else:
+    #     start = datetime.datetime.strptime(dates[0], '%b %d, %Y').strftime('%m%d%Y')
+    #     end = datetime.datetime.strptime(dates[-1], '%b %d, %Y').strftime('%m%d%Y')
+    #
+    # file_name = 'SWAT_'+ watershed + '_rch' + streamID + '_' + param_str
+    # print(file_name)
+
     csv_path = os.path.join(temp_workspace, 'swat_data.csv')
     try:
         os.remove(csv_path)
@@ -35,7 +50,7 @@ def write_csv(streamID, parameters, dates, values, timestep):
             writer.writerow(row_dict)
 
 
-def write_ascii(streamID, parameters, dates, values, timestep):
+def write_ascii(watershed, streamID, parameters, dates, values, timestep):
     ascii_path = os.path.join(temp_workspace, 'swat_data.txt')
     f = open(ascii_path, 'w+')
 

@@ -35,6 +35,11 @@ class swat(TethysAppBase):
                 controller='swat.controllers.timeseries'
             ),
             UrlMap(
+                name='add_watershed',
+                url='swat/add_watershed',
+                controller='swat.controllers.add_watershed'
+            ),
+            UrlMap(
                 name='upload_files',
                 url='swat/upload',
                 controller='swat.controllers.upload_files'

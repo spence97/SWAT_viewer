@@ -27,6 +27,7 @@ var LIBRARY_OBJECT = (function() {
         variable_data,
         wms_workspace,
         geoserver_url = 'http://216.218.240.206:8080/geoserver/wms/',
+//        geoserver_url = 'http://localhost:8080/geoserver/wms',
         wms_url,
         wms_layer,
         basin_layer,
@@ -46,6 +47,8 @@ var LIBRARY_OBJECT = (function() {
         get_time_series,
         update_dates,
         init_map,
+        downloadCsv,
+        downloadAscii,
         getCookie
 
 
@@ -310,6 +313,30 @@ function ajax_update_database(ajax_url, ajax_data) {
         });
     };
 
+    downloadCsv = function (){
+        var watershed = $('#watershed_select option:selected').val();
+        var parameter = $('#param_select option:selected').val();
+        var start = $('#start_pick').val();
+        var end = $('#end_pick').val();
+        var streamID = $('.highcharts-subtitle').text().split(',')[0].split(':')[1].replace( /\s/g, '');
+        console.log(watershed, streamID, parameter, start, end)
+        $.ajax({
+                type: 'POST',
+                url: '/apps/swat/download_csv/',
+                dataType: 'json',
+                data: {
+                    'watershed': watershed,
+                    'streamID': streamID,
+                    'parameter': parameter,
+                    'start': start,
+                    'end': end,
+                },
+            }).done(function() {
+
+            })
+
+    }
+
     init_events = function(){
 //      Initialize all map interactions
         var options = {
@@ -506,14 +533,16 @@ function ajax_update_database(ajax_url, ajax_data) {
                 url: wmsCapUrl,
                 dataType: 'xml',
                 success: function (xml) {
-                    var layers = xml.getElementsByTagName("Layer");
+//                    var layers = xml.getElementsByTagName("Layer");
                     var parser = new ol.format.WMSCapabilities();
                     var result = parser.read(xml);
                     var layers = result['Capability']['Layer']['Layer']
+                    console.log(layers)
                     for (var i=0; i<layers.length; i++) {
-                        if(layers[i].Title == store + '-basin') {
+                        if(layers[i].Title == store + '-subbasin') {
                             layer_xml = xml.getElementsByTagName('Layer')[i+1]
                             layerParams = layers[i]
+                            console.log(layerParams)
                         }
                     }
 
@@ -527,7 +556,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                         center: center,
                         projection: 'EPSG:4326',
                         extent: new_extent,
-                        zoom: 6
+                        zoom: 8
                     });
 
                     map.setView(view)
@@ -543,8 +572,8 @@ function ajax_update_database(ajax_url, ajax_data) {
             <Abstract>A solid blue line with a 2 pixel width</Abstract>\
             <LineSymbolizer>\
                 <Stroke>\
-                    <CssParameter name="stroke">#418ff4</CssParameter>\
-                    <CssParameter name="stroke-width">2</CssParameter>\
+                    <CssParameter name="stroke">#1500ff</CssParameter>\
+                    <CssParameter name="stroke-width">1.2</CssParameter>\
                 </Stroke>\
             </LineSymbolizer>\
             </Rule>\
@@ -580,11 +609,11 @@ function ajax_update_database(ajax_url, ajax_data) {
             <Title>Watersheds</Title>\
             <Abstract></Abstract>\
             <Fill>\
-              <CssParameter name="fill">#a9c5ce</CssParameter>\
-              <CssParameter name="fill-opacity">.5</CssParameter>\
+              <CssParameter name="fill">#adadad</CssParameter>\
+              <CssParameter name="fill-opacity">.8</CssParameter>\
             </Fill>\
             <Stroke>\
-              <CssParameter name="stroke">#2d2c2c</CssParameter>\
+              <CssParameter name="stroke">#000000</CssParameter>\
               <CssParameter name="stroke-width">.5</CssParameter>\
             </Stroke>\
             </PolygonSymbolizer>\
@@ -621,6 +650,8 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 //  When the Monthly/Daily toggle is clicked, update the datepickers to show only available options
     update_dates = function() {
+        var request = new XMLHttpRequest();
+        request.open('GET', '')
         if($(".toggle").hasClass( "off")) {
             var options = {
                 format: 'MM d, yyyy',
@@ -675,14 +706,15 @@ $(function() {
         init_all();
         $("#start_pick").attr("autocomplete","off")
         $("#end_pick").attr("autocomplete","off")
+        $("#id_watershed_name").attr("autocomplete","off")
         $(".monthDayToggle").change(function(){
             update_dates();
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
         });
-        $("#upload").click(function() {
-            $("#upload-modal").modal('show');
-        });
+//        $("#upload").click(function() {
+//            $("#upload-modal").modal('show');
+//        });
         $("#watershed_select").change(function(){
             map.removeLayer(basin_layer);
             map.removeLayer(streams_layer);
@@ -694,6 +726,9 @@ $(function() {
         $(".form-group").change(function(){
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
+        })
+        $("#submit-download-csv").click(function() {
+            downloadCsv()
         })
     });
 
