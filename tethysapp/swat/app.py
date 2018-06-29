@@ -8,7 +8,7 @@ class swat(TethysAppBase):
 
     name = 'SWAT Data Viewer'
     index = 'swat:home'
-    icon = 'swat/images/logo.png'
+    icon = 'swat/images/logo1.png'
     package = 'swat'
     root_url = 'swat'
     color = '#2c3e50'
