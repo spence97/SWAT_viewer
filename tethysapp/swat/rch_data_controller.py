@@ -46,7 +46,6 @@ def extract_monthly_rch(watershed, start, end, parameters, reachid):
                         param_vals[i] = new_val
                         param_vals.pop(i+1)
                 break
-    print(param_vals)
 
 
 
@@ -73,7 +72,6 @@ def extract_monthly_rch(watershed, start, end, parameters, reachid):
     for x in range(0,len(parameters)):
         param_index = param_vals.index(parameters[x])
         param_name = param_names[parameters[x]]
-        print(param_name)
         data = []
         f = open(monthly_rch_path)
 
@@ -128,7 +126,6 @@ def extract_daily_rch(watershed, start, end, parameters, reachid):
                         param_vals.pop(i+1)
 
                 break
-    print(param_vals)
 
     dt_start = datetime.strptime(start, '%B %d, %Y')
     start_index = dt_start.timetuple().tm_yday

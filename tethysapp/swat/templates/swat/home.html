@@ -63,7 +63,6 @@
 {% block app_content %}
 
   <div id="map" class="map"></div>
-  <div id="popup" class="popup"></div>
 {% endblock %}
 
 {# Use the after_app_content block for modals #}
@@ -101,19 +100,54 @@
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
-        <div class="modal-body">
-          <div class="flex-container-row"><img id="view-file-loading" class="view-file hidden" src="/static/swat/images/loader.gif" style="margin: auto"/></div>
-          <h6 id="error" class="hidden"></h6>
-          <div id="container" class="view_chart hidden"></div>
+        <div id="tabs" class="modal-body">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" id="timeseries_link" class = "active"><a id="timeseries_tab_link" href="#timeseries_tab" aria-controls="forecast_tab" role="tab" data-toggle="tab">Time-Series</a></li>
+            <li role="presentation" id="watershed_link"><a id="watershed_tab_link" href="#watershed_tab" aria-controls="watershed_tab" role="tab" data-toggle="tab">Watershed Data</a></li>
+          </ul>
+
+          <!--Tab Panes-->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="timeseries_tab">
+              <div class="panel-body">
+                <div class="flex-container-row"><img id="view-file-loading" class="view-file hidden" src="/static/swat/images/loader.gif" style="margin: auto"/></div>
+                <h6 id="error" class="hidden"></h6>
+                <div id="container" class="view_chart hidden"></div>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="watershed_tab">
+              <div class="panel-body">
+                <div id="watershed_data_container" class="watershed_data_container">
+                  <h6><strong>Watershed Data</strong></h6>
+                  <dl>
+                    <dt>Total Precipitation in Upstream Catchments:</dt>
+                    <dd>15 mm</dd>
+                    <dt>Total Evaporation in Upstream Reaches:</dt>
+                    <dd>.1 cms</dd>
+                    <dt>Average Soil Moisture of Upstream Catchments:</dt>
+                    <dd>40%</dd>
+                  </dl>
+                </div>
+                <div id="modal_map_container" class="modal_map_container">
+                  <div id="modal_map" class="modal_map"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--<div class="flex-container-row"><img id="view-file-loading" class="view-file hidden" src="/static/swat/images/loader.gif" style="margin: auto"/></div>-->
+          <!--<h6 id="error" class="hidden"></h6>-->
+          <!--<div id="container" class="view_chart hidden"></div>-->
         </div>
         <div class="modal-footer">
           <div class="download-buttons">
             <div id="download_csv" class="btn-group hidden" role="group">
-              <a class="btn btn-success" role="button" id="submit-download-csv" href="../download_csv">
+              <a class="btn btn-success" role="button" id="submit-download-csv" href="{% url 'swat:download_csv' %}">
                 <span class="glyphicon glyphicon-download-alt"></span>&nbsp;&nbsp;Download .csv</a>
             </div>
             <div id="download_ascii" class="btn-group hidden" role="group">
-              <a class="btn btn-success" role="button" id="submit-download-ascii" href="../download_ascii">
+              <a class="btn btn-success" role="button" id="submit-download-ascii" href="{% url 'swat:download_ascii' %}">
                 <span class="glyphicon glyphicon-download-alt"></span>&nbsp;&nbsp;Download ASCII</a>
             </div>
           </div>

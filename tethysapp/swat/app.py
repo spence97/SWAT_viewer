@@ -30,6 +30,11 @@ class swat(TethysAppBase):
                 controller='swat.controllers.home'
             ),
             UrlMap(
+                name='get-upstream',
+                url='swat/get_upstream',
+                controller='swat.controllers.get_upstream'
+            ),
+            UrlMap(
                 name='time-series',
                 url='swat/timeseries',
                 controller='swat.controllers.timeseries'

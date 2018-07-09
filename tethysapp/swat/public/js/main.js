@@ -20,6 +20,7 @@ var LIBRARY_OBJECT = (function() {
         var current_layer,
         element,
         layers,
+        modal_map,
         map,
         popup,
         $plotModal,
@@ -28,6 +29,7 @@ var LIBRARY_OBJECT = (function() {
         wms_workspace,
         geoserver_url = 'http://216.218.240.206:8080/geoserver/wms/',
 //        geoserver_url = 'http://localhost:8080/geoserver/wms',
+        upstreams,
         wms_url,
         wms_layer,
         basin_layer,
@@ -47,6 +49,7 @@ var LIBRARY_OBJECT = (function() {
         get_time_series,
         update_selectors,
         init_map,
+        init_modal_map,
         downloadCsv,
         downloadAscii,
         getCookie
@@ -161,6 +164,49 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     };
 
+    init_modal_map = function() {
+//      Initialize all the initial map elements (projection, basemap, layers, center, zoom)
+        var projection = ol.proj.get('EPSG:4326');
+        var baseLayer = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: '5TC0yID7CYaqv3nVQLKe~xWVt4aXWMJq2Ed72cO4xsA~ApdeyQwHyH_btMjQS1NJ7OHKY8BK-W-EMQMrIavoQUMYXeZIQOUURnKGBOC7UCt4',
+                imagerySet: 'AerialWithLabels' // Options 'Aerial', 'AerialWithLabels', 'Road'
+            })
+        });
+
+        featureOverlayStream = new ol.layer.Vector({
+            source: new ol.source.Vector()
+        });
+
+        featureOverlaySubbasin = new ol.layer.Vector({
+            source: new ol.source.Vector()
+        });
+
+        var view = new ol.View({
+            center: [104.5, 17.5],
+            projection: projection,
+            zoom: 5.5
+        });
+
+        wms_source = new ol.source.ImageWMS();
+
+        wms_layer = new ol.layer.Image({
+            source: wms_source
+        });
+
+        layers = [baseLayer, featureOverlayStream, featureOverlaySubbasin];
+
+        modal_map = new ol.Map({
+            target: document.getElementById("modal_map"),
+            layers: layers,
+            view: view
+        });
+
+        map.crossOrigin = 'anonymous';
+
+    };
+
+
     get_time_series = function(watershed, start, end, parameters, streamID) {
 //      Function to pass selected dates, parameters, and streamID to the rch data parser python function and then plot the data
         var monthOrDay
@@ -169,7 +215,6 @@ function ajax_update_database(ajax_url, ajax_data) {
         } else {
             monthOrDay = 'Monthly'
         }
-        console.log(watershed, start, end, parameters, streamID, monthOrDay)
 //      AJAX call to the timeseries python controller to run the rch data parser function
         $.ajax({
             type: 'POST',
@@ -339,7 +384,9 @@ function ajax_update_database(ajax_url, ajax_data) {
             });
             $(window).on('resize', function () {
                 map.updateSize();
+
             });
+
 
             config = {attributes: true};
 
@@ -347,14 +394,15 @@ function ajax_update_database(ajax_url, ajax_data) {
         }());
 
         map.on("singleclick",function(evt){
-//
+            var clickCoord = evt.coordinate;
+            console.log(clickCoord)
             var start = $('#start_pick').val();
-            console.log(start)
             var end = $('#end_pick').val();
-            console.log(end)
             var parameter = $('#param_select option:selected').val();
             map.removeLayer(featureOverlayStream);
             map.removeLayer(featureOverlaySubbasin);
+            modal_map.removeLayer(featureOverlayStream);
+            modal_map.removeLayer(featureOverlaySubbasin);
 
 
             if (map.getTargetElement().style.cursor == "pointer") {
@@ -372,11 +420,13 @@ function ajax_update_database(ajax_url, ajax_data) {
                     if (!$('#error').hasClass('hidden')) {
                         $('#error').addClass('hidden')
                     }
-                    $("#ts-modal").modal('show');
+
+
 
                     var store = $('#watershed_select option:selected').val()
                     var reach_store_id = 'swat:' + store + '-reach'
                     var basin_store_id = 'swat:' + store + '-subbasin'
+
 
                     var clickCoord = evt.coordinate;
                     var view = map.getView();
@@ -402,53 +452,92 @@ function ajax_update_database(ajax_url, ajax_data) {
                                }
                                var streamID = parseFloat(result["features"][0]["properties"]["Subbasin"]);
                                var watershed = $('#watershed_select').val();
+
+
+                               $.ajax({
+                                    type: "POST",
+                                    url: '/apps/swat/get_upstream/',
+                                    data: {
+                                        'watershed': watershed,
+                                        'streamID': streamID
+                                    },
+                                    success: function(data) {
+
+                                        upstreams = data.upstreams
+                                        console.log(upstreams)
+                                        var cql_filter
+                                        if (upstreams.length > 376) {
+                                            cql_filter = 'Subbasin=' + streamID.toString();
+                                        } else {
+                                            cql_filter = 'Subbasin=' + streamID.toString();
+                                            for (var i=1; i<upstreams.length; i++) {
+                                                cql_filter += ' OR Subbasin=' + upstreams[i].toString();
+                                            }
+                                        }
+
+                                        var streamVectorSource = new ol.source.Vector({
+                                            format: new ol.format.GeoJSON(),
+                                            url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+reach_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                            strategy: ol.loadingstrategy.bbox
+                                       });
+
+                                       featureOverlayStream = new ol.layer.Vector({
+                                            source: streamVectorSource,
+                                            style: new ol.style.Style({
+                                                stroke: new ol.style.Stroke({
+                                                    color: '#f44242',
+                                                    width: 4
+                                                })
+                                            })
+                                       });
+
+
+                                       var subbasinVectorSource = new ol.source.Vector({
+                                            format: new ol.format.GeoJSON(),
+                                            url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+basin_store_id+'&CQL_FILTER='+cql_filter+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                            strategy: ol.loadingstrategy.bbox
+                                       });
+
+                                       var color = '#0dd8c0';
+                                       color = ol.color.asArray(color);
+                                       color = color.slice();
+                                       color[3] = 0.5;
+
+                                       featureOverlaySubbasin = new ol.layer.Vector({
+                                            source: subbasinVectorSource,
+                                            style: new ol.style.Style({
+                                                stroke: new ol.style.Stroke({
+                                                    color: '#000000',
+                                                    width: 2
+                                                }),
+                                                fill: new ol.style.Fill({
+                                                    color: color
+                                                })
+                                            })
+                                       });
+                                       var view = new ol.View({
+                                            center: clickCoord,
+                                            projection: 'EPSG:4326',
+                                            zoom: 8.4
+                                        });
+
+                                        modal_map.setView(view)
+                                        map.addLayer(featureOverlaySubbasin);
+                                        map.addLayer(featureOverlayStream);
+                                        modal_map.addLayer(featureOverlaySubbasin);
+                                        modal_map.addLayer(featureOverlayStream);
+                                        modal_map.updateSize();
+                                    }
+                               })
+
                                var start = $('#start_pick').val();
                                var end = $('#end_pick').val();
                                $('#param_select option:selected').each(function() {
                                     parameters.push( $( this ).val());
                                });
 
-                               var streamVectorSource = new ol.source.Vector({
-                                    format: new ol.format.GeoJSON(),
-                                    url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+reach_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
-                                    strategy: ol.loadingstrategy.bbox
-                               });
-
-                               featureOverlayStream = new ol.layer.Vector({
-                                    source: streamVectorSource,
-                                    style: new ol.style.Style({
-                                        stroke: new ol.style.Stroke({
-                                            color: '#1500ff',
-                                            width: 4
-                                        })
-                                    })
-                               });
-
-                               var subbasinVectorSource = new ol.source.Vector({
-                                    format: new ol.format.GeoJSON(),
-                                    url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+basin_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
-                                    strategy: ol.loadingstrategy.bbox
-                               });
-                               var color = '#0dd8c0';
-                               color = ol.color.asArray(color);
-                               color = color.slice();
-                               color[3] = 0.5;
-                               featureOverlaySubbasin = new ol.layer.Vector({
-                                    source: subbasinVectorSource,
-                                    style: new ol.style.Style({
-                                        stroke: new ol.style.Stroke({
-                                            color: '#000000',
-                                            width: 2
-                                        }),
-                                        fill: new ol.style.Fill({
-                                            color: color
-                                        })
-                                    })
-                               });
-
-                               map.addLayer(featureOverlaySubbasin);
-                               map.addLayer(featureOverlayStream);
                                get_time_series(watershed, start, end, parameters, streamID);
+                               $("#ts-modal").modal('show');
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
 
@@ -637,16 +726,13 @@ function ajax_update_database(ajax_url, ajax_data) {
             var watershed_name = x[i].childNodes[0].innerHTML
             if (String(watershed_name) === String(watershed)) {
                 watershed_num = i
-                console.log(watershed_num)
             }
         }
 
 
         if($(".toggle").hasClass( "off")) {
             start_date = xmlDoc.getElementsByTagName("day_start_date")[watershed_num].innerHTML
-            console.log(start_date)
             end_date = xmlDoc.getElementsByTagName("day_end_date")[watershed_num].innerHTML
-            console.log(end_date)
             var options = {
                 format: 'MM d, yyyy',
                 startDate: start_date,
@@ -662,9 +748,7 @@ function ajax_update_database(ajax_url, ajax_data) {
             });
         } else {
             start_date = xmlDoc.getElementsByTagName("month_start_date")[watershed_num].innerHTML;
-            console.log(start_date)
             end_date = xmlDoc.getElementsByTagName("month_end_date")[watershed_num].innerHTML;
-            console.log(end_date)
             var options = {
                 format: 'MM yyyy',
                 startDate: start_date,
@@ -686,6 +770,7 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     init_all = function(){
         init_map();
+        init_modal_map();
         init_events();
         add_basins();
         add_streams();
@@ -718,9 +803,6 @@ $(function() {
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
         });
-//        $("#upload").click(function() {
-//            $("#upload-modal").modal('show');
-//        });
         $("#watershed_select").change(function(){
             loadXMLDoc();
             map.removeLayer(basin_layer);
@@ -734,10 +816,17 @@ $(function() {
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
         })
-    });
 
+        $(".nav-tabs").click(function(){
+            setTimeout(updatemap, 200);
+            function updatemap() {
+                if ($("#watershed_tab").hasClass('active')) {
+                    modal_map.updateSize();
+                }
+            }
+        })
 
-
+})
 
     return public_interface;
 
@@ -746,141 +835,3 @@ $(function() {
 // NOTE: that the call operator (open-closed parenthesis) is used to invoke the library wrapper
 // function immediately after being parsed.
 
-
-// Old code to reference
-
-
-//        var baseLayer = new ol.layer.Tile({
-//            source: new ol.source.Stamen({
-//                layer: 'terrain-background'
-//            }),
-//        })
-
-//        var baseLayer = new ol.layer.Tile({
-//            source: new ol.source.TileJSON({
-//                url: 'https://api.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy.json?secure',
-//                crossOrigin: 'anonymous'
-//            }),
-//        })
-
-//    add_basins = function(){
-//        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>swat_mekong:subbasin</Name><UserStyle><FeatureTypeStyle><Rule>\
-//            <PolygonSymbolizer>\
-//            <Name>rule1</Name>\
-//            <Title>Watersheds</Title>\
-//            <Abstract></Abstract>\
-//            <Fill>\
-//              <CssParameter name="fill">#a9c5ce</CssParameter>\
-//              <CssParameter name="fill-opacity">0</CssParameter>\
-//            </Fill>\
-//            <Stroke>\
-//              <CssParameter name="stroke">#2d2c2c</CssParameter>\
-//              <CssParameter name="stroke-width">.5</CssParameter>\
-//            </Stroke>\
-//            </PolygonSymbolizer>\
-//            </Rule>\
-//            </FeatureTypeStyle>\
-//            </UserStyle>\
-//            </NamedLayer>\
-//            </StyledLayerDescriptor>';
-//
-//        wms_source = new ol.source.ImageWMS({
-//            url: 'http://localhost:8080/geoserver/wms',
-//            params: {'LAYERS':'swat_mekong:subbasin','SLD_BODY':sld_string},
-//            serverType: 'geoserver',
-//            crossOrigin: 'Anonymous'
-//        });
-//
-//        basin_layer = new ol.layer.Image({
-//            source: wms_source
-//        });
-//
-//
-//        map.addLayer(basin_layer);
-//
-//    }
-
-
-//    update_dates = function(){
-//        if ($(".toggle").hasClass( "off" )) {
-//            $("#datePickStart").load(' #start_pick');
-//            $("#datePickEnd").load(' #end_pick');
-//            $.ajax({
-//                type: 'GET',
-//                url: '/apps/swat/home/',
-//                data: {
-//                    'startDate': 'January 01, 2011',
-//                    'endDate': 'January 02, 2011',
-//                    'format': 'MM d, yyyy',
-//                    'startView': 'year',
-//                    'minView': 'days'
-//                },
-//            }).done(function() {
-//
-////                $(".form-control").attr("data-date-start-date", "January 01, 2011")
-////                $(".form-control").attr("data-date-end-date", "January 02, 2011")
-////                $(".form-control").attr("data-date-format", "MM d, yyyy")
-////                $(".form-control").attr("data-date-start-view", "year")
-////                $(".form-control").attr("data-date-min-view-mode", "days")
-//            })
-//        } else {
-////            $("#datePickStart").load(' #start_pick');
-////            $("#datePickEnd").load(' #end_pick');
-////            $.ajax({
-////                type: 'GET',
-////                url: '/apps/swat/home/',
-////                data: {
-////                    'startDate': 'January 2005',
-////                    'endDate': 'December 2015',
-////                    'format': 'MM yyyy',
-////                    'startView': 'decade',
-////                    'minView': 'months'
-////                },
-////            }).done(function(){
-//
-////                $(".form-control").attr("data-date-start-date", "January 2005")
-////                $(".form-control").attr("data-date-end-date", "December 2015")
-////                $(".form-control").attr("data-date-format", "MM yyyy")
-////                $(".form-control").attr("data-date-start-view", "decade")
-////                $(".form-control").attr("data-date-min-view-mode", "months")
-//            })
-//        }
-//    }
-
-
-    //                        var streamID = parseFloat(value["features"][0]["properties"]["Subbasin"]);
-    //                        console.log(streamID);
-    //                        var parameter = $('#param_select option:selected').val();
-    //                        console.log(parameter);
-    //                        var start = $('#start_pick').val();
-    //                        console.log(start);
-    //                        var end = $('#end_pick').val();
-    //                        console.log(end);
-
-    //                        var popup_content = '<div class="stream-popup">' +
-    //                                      '<p><b>' + 'Stream ID: ' + streamID + '</b></p>' +
-    //                                      '<table class="table  table-condensed">' +
-    //                                      '</table>' +
-    //                                      '<div class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="View Plot">' +
-    //                                        '<a data-toggle="modal" data-target="#plot-modal"> View Time-Series </a>' +
-    //                                      '</div>' +
-    ////                                      '<a class="btn btn-success" data-target="#plot-modal">View Time-Series</a>' +
-    //                                      '</div>';
-    //
-    //                        // Clean up last popup and reinitialize
-    //                        $(element).popover('destroy');
-    //
-    //                        // Delay arbitrarily to wait for previous popover to
-    //                        // be deleted before showing new popover.
-    //                        setTimeout(function() {
-    //                            popup.setPosition(clickCoord);
-    //
-    //                            $(element).popover({
-    //                                'placement': 'top',
-    //                                'animation': true,
-    //                                'html': true,
-    //                                'content': popup_content
-    //                            });
-    //
-    //                              $(element).popover('show');
-    //                          }, 500);

@@ -4,6 +4,7 @@ from django.core.files import File
 from django.http import JsonResponse, HttpResponseRedirect
 from django.core.files import File
 from .rch_data_controller import extract_monthly_rch, extract_daily_rch
+from .get_upstream import get_upstreams
 from .model import write_csv, write_ascii
 from .app import swat as app
 from .forms import UploadWatershedForm
@@ -134,6 +135,17 @@ def home(request):
 
     return render(request, 'swat/home.html', context)
 
+def get_upstream(request):
+    """
+    Controller to get list of all upstream reach ids and pass it to front end
+    """
+    watershed = request.POST.get('watershed')
+    streamID = request.POST.get('streamID')
+
+    upstreams = get_upstreams(watershed, streamID)
+
+    json_dict = JsonResponse({'watershed': watershed, 'streamID': streamID, 'upstreams': upstreams})
+    return json_dict
 
 def timeseries(request):
     """
@@ -196,11 +208,8 @@ def upload_files(request):
         new_dir = os.path.join(data_path, watershed_name)
         if form.is_valid():
             form.save()
-            print('form saved')
             os.makedirs(new_dir)
-            print('new_dir created')
             save_files(watershed_name)
-            print('save_files completed')
 
         return HttpResponseRedirect('../home/')
     else:
