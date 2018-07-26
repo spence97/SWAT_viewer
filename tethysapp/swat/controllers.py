@@ -1,6 +1,5 @@
 from django.shortcuts import *
 from tethys_sdk.gizmos import *
-from django.core.files import File
 from django.http import JsonResponse, HttpResponseRedirect
 from django.core.files import File
 from .rch_data_controller import extract_monthly_rch, extract_daily_rch
@@ -10,7 +9,8 @@ from .app import swat as app
 from .forms import UploadWatershedForm
 from .upload_files import save_files
 from .config import data_path, temp_workspace
-import os
+from .clip import write_shp
+import os, json, random, string
 
 def home(request):
     """
@@ -145,6 +145,21 @@ def get_upstream(request):
     upstreams = get_upstreams(watershed, streamID)
 
     json_dict = JsonResponse({'watershed': watershed, 'streamID': streamID, 'upstreams': upstreams})
+    return json_dict
+
+def raster_compute(request):
+    """
+    Controller to clip soil and lulc rasters to upstream boundary and run raster calcs on clipped extents for basin statistics
+    """
+    upstream_json = json.loads(request.body)
+    unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    unique_path = os.path.join(temp_workspace, unique_id)
+    os.makedirs(unique_path, 0777)
+    with open(unique_path + '/upstream.json', 'w') as outfile:
+        json.dump(upstream_json, outfile)
+
+    write_shp(unique_id)
+    json_dict = JsonResponse({'hello': 'hi'})
     return json_dict
 
 def timeseries(request):

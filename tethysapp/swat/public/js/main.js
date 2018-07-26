@@ -29,11 +29,14 @@ var LIBRARY_OBJECT = (function() {
         wms_workspace,
         geoserver_url = 'http://216.218.240.206:8080/geoserver/wms/',
 //        geoserver_url = 'http://localhost:8080/geoserver/wms',
+        cql_filter,
         upstreams,
         wms_url,
         wms_layer,
         basin_layer,
         streams_layer,
+        lulc_layer,
+        soil_layer,
         featureOverlayStream,
         featureOverlaySubbasin,
         $loading,
@@ -43,11 +46,14 @@ var LIBRARY_OBJECT = (function() {
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
     var add_basins,
+        add_lulc,
+        add_soil,
         add_streams,
         init_events,
         init_all,
         get_time_series,
         update_selectors,
+        toggleLayers,
         init_map,
         init_modal_map,
         downloadCsv,
@@ -395,7 +401,6 @@ function ajax_update_database(ajax_url, ajax_data) {
 
         map.on("singleclick",function(evt){
             var clickCoord = evt.coordinate;
-            console.log(clickCoord)
             var start = $('#start_pick').val();
             var end = $('#end_pick').val();
             var parameter = $('#param_select option:selected').val();
@@ -440,8 +445,8 @@ function ajax_update_database(ajax_url, ajax_data) {
                             url: wms_url,
                             dataType: 'json',
                             success: function (result) {
-                               var parameters = [];
-                               if (parseFloat(result["features"].length < 1)) {
+                                var parameters = [];
+                                if (parseFloat(result["features"].length < 1)) {
                                     $('#error').html('<p class="alert alert-danger" style="text-align: center"><strong>An unknown error occurred while retrieving the data. Please try again</strong></p>');
                                     $('#error').removeClass('hidden');
                                     $loading.addClass('hidden')
@@ -449,12 +454,12 @@ function ajax_update_database(ajax_url, ajax_data) {
                                     setTimeout(function () {
                                         $('#error').addClass('hidden')
                                     }, 5000);
-                               }
-                               var streamID = parseFloat(result["features"][0]["properties"]["Subbasin"]);
-                               var watershed = $('#watershed_select').val();
+                                }
+                                var streamID = parseFloat(result["features"][0]["properties"]["Subbasin"]);
+                                var watershed = $('#watershed_select').val();
 
 
-                               $.ajax({
+                                $.ajax({
                                     type: "POST",
                                     url: '/apps/swat/get_upstream/',
                                     data: {
@@ -464,8 +469,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                                     success: function(data) {
 
                                         upstreams = data.upstreams
-                                        console.log(upstreams)
-                                        var cql_filter
+
                                         if (upstreams.length > 376) {
                                             cql_filter = 'Subbasin=' + streamID.toString();
                                         } else {
@@ -474,14 +478,14 @@ function ajax_update_database(ajax_url, ajax_data) {
                                                 cql_filter += ' OR Subbasin=' + upstreams[i].toString();
                                             }
                                         }
-
+                                        var reach_url = geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+reach_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326'
                                         var streamVectorSource = new ol.source.Vector({
                                             format: new ol.format.GeoJSON(),
-                                            url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+reach_store_id+'&CQL_FILTER=Subbasin='+streamID+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                            url: reach_url,
                                             strategy: ol.loadingstrategy.bbox
-                                       });
+                                        });
 
-                                       featureOverlayStream = new ol.layer.Vector({
+                                        featureOverlayStream = new ol.layer.Vector({
                                             source: streamVectorSource,
                                             style: new ol.style.Style({
                                                 stroke: new ol.style.Stroke({
@@ -489,21 +493,22 @@ function ajax_update_database(ajax_url, ajax_data) {
                                                     width: 4
                                                 })
                                             })
-                                       });
+                                        });
 
+                                        var basin_url = geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+basin_store_id+'&CQL_FILTER='+cql_filter+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326'
 
-                                       var subbasinVectorSource = new ol.source.Vector({
+                                        var subbasinVectorSource = new ol.source.Vector({
                                             format: new ol.format.GeoJSON(),
-                                            url: geoserver_url + 'ows?service=wfs&version=2.0.0&request=getfeature&typename='+basin_store_id+'&CQL_FILTER='+cql_filter+'&outputFormat=application/json&srsname=EPSG:4326&,EPSG:4326',
+                                            url: basin_url,
                                             strategy: ol.loadingstrategy.bbox
-                                       });
+                                        });
 
-                                       var color = '#0dd8c0';
-                                       color = ol.color.asArray(color);
-                                       color = color.slice();
-                                       color[3] = 0.5;
+                                        var color = '#0dd8c0';
+                                        color = ol.color.asArray(color);
+                                        color = color.slice();
+                                        color[3] = 0.5;
 
-                                       featureOverlaySubbasin = new ol.layer.Vector({
+                                        featureOverlaySubbasin = new ol.layer.Vector({
                                             source: subbasinVectorSource,
                                             style: new ol.style.Style({
                                                 stroke: new ol.style.Stroke({
@@ -514,8 +519,8 @@ function ajax_update_database(ajax_url, ajax_data) {
                                                     color: color
                                                 })
                                             })
-                                       });
-                                       var view = new ol.View({
+                                        });
+                                        var view = new ol.View({
                                             center: clickCoord,
                                             projection: 'EPSG:4326',
                                             zoom: 8.4
@@ -527,6 +532,19 @@ function ajax_update_database(ajax_url, ajax_data) {
                                         modal_map.addLayer(featureOverlaySubbasin);
                                         modal_map.addLayer(featureOverlayStream);
                                         modal_map.updateSize();
+
+                                        $.getJSON(basin_url, function(data) {
+                                            console.log(data);
+                                            var upstreamJson = data;
+                                            $.ajax({
+                                                type: 'POST',
+                                                url: "/apps/swat/raster_compute/",
+                                                data: JSON.stringify(upstreamJson),
+                                                success: function(result){
+                                                    console.log(result.hello)
+                                                }
+                                            })
+                                        });
                                     }
                                })
 
@@ -671,10 +689,10 @@ function ajax_update_database(ajax_url, ajax_data) {
             <Abstract></Abstract>\
             <Fill>\
               <CssParameter name="fill">#adadad</CssParameter>\
-              <CssParameter name="fill-opacity">.8</CssParameter>\
+              <CssParameter name="fill-opacity">.1</CssParameter>\
             </Fill>\
             <Stroke>\
-              <CssParameter name="stroke">#000000</CssParameter>\
+              <CssParameter name="stroke">#ffffff</CssParameter>\
               <CssParameter name="stroke-width">.5</CssParameter>\
             </Stroke>\
             </PolygonSymbolizer>\
@@ -698,6 +716,146 @@ function ajax_update_database(ajax_url, ajax_data) {
 
 //      add subbasins to the map
         map.addLayer(basin_layer);
+
+    }
+
+    add_lulc = function(){
+//      add the streams for the selected watershed
+        var store = 'lmrb_2010_lulc_map1'
+        var store_id = 'swat:' + store
+
+        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>'+store_id+'</Name><UserStyle><FeatureTypeStyle><Rule>\
+            <RasterSymbolizer> \
+            <ColorMap> \
+            <ColorMapEntry color="#0055ff" quantity="10" label="water" opacity="1" />\
+                <ColorMapEntry color="#91522f" quantity="15" label="barren - rock outcrops" opacity="0.7" />\
+                <ColorMapEntry color="#ff0000" quantity="16" label="urban" opacity="0.7" />\
+                <ColorMapEntry color="#ffadad" quantity="21" label="agriculture-rice-1 crop/year" opacity="0.7" />\
+                <ColorMapEntry color="#ff54f0" quantity="22" label="agriculture-rice-2 crops/year" opacity="0.7" />\
+                <ColorMapEntry color="#ffe100" quantity="23" label="agriculture-mixed annual crops-other than rice" opacity="0.7" />\
+                <ColorMapEntry color="#ffae00" quantity="24" label="agriculture-shifting cultivation-cleared before 2010-herbaceous cover" opacity="0.7" />\
+                <ColorMapEntry color="#912f08" quantity="25" label="agriculture-shifting cultivation-cleared in 2010" opacity="0.7" />\
+                <ColorMapEntry color="#593200" quantity="26" label="agriculture-shifting cultivation-partially cleared in 2010" opacity="0.7" />\
+                <ColorMapEntry color="#ed6600" quantity="31" label="deciduous shrubland-mixed scrub/herbaceous/low broadleaved forest" opacity="0.7" />\
+                <ColorMapEntry color="#a0d89e" quantity="32" label="forest/scrub-deciduous broadleaved-low height" opacity="0.7" />\
+                <ColorMapEntry color="#269924" quantity="33" label="forest-deciduous/evergreen-low/medium height" opacity="0.7" />\
+                <ColorMapEntry color="#013d00" quantity="34" label="forest-evergreen broadleaved-medium/tall height" opacity="0.7" />\
+                <ColorMapEntry color="#026801" quantity="35" label="forest-evergreen/deciduous broadleaved-low/medium height" opacity="0.7" />\
+                <ColorMapEntry color="#99ff00" quantity="36" label="bamboo scrub/forest-low height-mostly evergreen" opacity="0.7" />\
+                <ColorMapEntry color="#969696" quantity="41" label="grassland-sparse vegetation" opacity="0.7" />\
+                <ColorMapEntry color="#8300db" quantity="42" label="industrial forest plantation-low/medium height" opacity="0.7" />\
+                <ColorMapEntry color="#0092ed" quantity="43" label="wetland-mixed shrubland/herbaceous riparian areas" opacity="0.7" /></ColorMap>\
+            </RasterSymbolizer>\
+            </Rule>\
+            </FeatureTypeStyle>\
+            </UserStyle>\
+            </NamedLayer>\
+            </StyledLayerDescriptor>';
+
+
+//      Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
+        wms_source = new ol.source.ImageWMS({
+            url: geoserver_url,
+            params: {'LAYERS':store_id,'SLD_BODY':sld_string},
+            serverType: 'geoserver',
+            crossOrigin: 'Anonymous'
+        });
+
+        lulc_layer = new ol.layer.Image({
+            source: wms_source
+        });
+
+//      add subbasins to the map
+        map.addLayer(lulc_layer);
+
+    }
+
+    add_soil = function(){
+//      add the streams for the selected watershed
+        var store = 'lmrb_soil_hwsd1'
+        var store_id = 'swat:' + store
+
+        var sld_string = '<StyledLayerDescriptor version="1.0.0"><NamedLayer><Name>'+store_id+'</Name><UserStyle><FeatureTypeStyle><Rule>\
+            <RasterSymbolizer> \
+            <ColorMap> \
+            <ColorMapEntry color="#000000" quantity="65535" label="nodata" opacity="0.0" />\
+                <ColorMapEntry color="#2471a3" quantity="4260" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2e86c1" quantity="4261" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#3498db" quantity="4264" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#5dade2" quantity="4265" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#85c1e9" quantity="4267" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#a3e4d7" quantity="4284" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#d5f5e3" quantity="4325" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f9e79f" quantity="4383" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f4d03f" quantity="4393" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f5b041" quantity="4408" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#eb984e" quantity="4414" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2471a3" quantity="4452" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2e86c1" quantity="4464" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#3498db" quantity="4486" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#5dade2" quantity="4491" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#85c1e9" quantity="4494" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#a3e4d7" quantity="4499" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#d5f5e3" quantity="4502" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f9e79f" quantity="4544" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f4d03f" quantity="4587" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f5b041" quantity="4588" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#eb984e" quantity="6651" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2471a3" quantity="11375" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2e86c1" quantity="11604" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#3498db" quantity="11605" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#5dade2" quantity="11766" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#85c1e9" quantity="11770" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#a3e4d7" quantity="11772" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#d5f5e3" quantity="11782" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f9e79f" quantity="11783" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f4d03f" quantity="11786" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f5b041" quantity="11787" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#eb984e" quantity="11788" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2471a3" quantity="11790" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#2e86c1" quantity="11794" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#3498db" quantity="11796" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#5dade2" quantity="11797" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#85c1e9" quantity="11798" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#a3e4d7" quantity="11800" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#d5f5e3" quantity="11804" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f9e79f" quantity="11805" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f4d03f" quantity="11808" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f5b041" quantity="11811" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#eb984e" quantity="11814" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#5dade2" quantity="11818" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#85c1e9" quantity="11821" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#a3e4d7" quantity="11839" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#d5f5e3" quantity="11840" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f9e79f" quantity="11843" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f4d03f" quantity="11844" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f5b041" quantity="11847" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#eb984e" quantity="11857" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#d5f5e3" quantity="11864" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f9e79f" quantity="11865" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#f4d03f" quantity="11868" label="1" opacity="0.7" />\
+                <ColorMapEntry color="#e57e22" quantity="11869" label="1" opacity="0.7" /></ColorMap>\
+            </RasterSymbolizer>\
+            </Rule>\
+            </FeatureTypeStyle>\
+            </UserStyle>\
+            </NamedLayer>\
+            </StyledLayerDescriptor>';
+
+//      Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
+        wms_source = new ol.source.ImageWMS({
+            url: geoserver_url,
+            params: {'LAYERS':store_id,'SLD_BODY':sld_string},
+            serverType: 'geoserver',
+            crossOrigin: 'Anonymous'
+        });
+
+        soil_layer = new ol.layer.Image({
+            source: wms_source
+        });
+
+//      add subbasins to the map
+        map.addLayer(soil_layer);
 
     }
 
@@ -730,7 +888,7 @@ function ajax_update_database(ajax_url, ajax_data) {
         }
 
 
-        if($(".toggle").hasClass( "off")) {
+        if ($(".toggle").hasClass( "off")) {
             start_date = xmlDoc.getElementsByTagName("day_start_date")[watershed_num].innerHTML
             end_date = xmlDoc.getElementsByTagName("day_end_date")[watershed_num].innerHTML
             var options = {
@@ -765,6 +923,38 @@ function ajax_update_database(ajax_url, ajax_data) {
         }
         $('#start_pick').attr('placeholder', 'Start Date')
         $('#end_pick').attr('placeholder', 'End Date')
+
+    }
+
+    toggleLayers = function() {
+        if ($('#lulcOption').is(':checked')) {
+            map.removeLayer(featureOverlaySubbasin)
+            map.removeLayer(featureOverlayStream)
+            map.removeLayer(soil_layer)
+            map.removeLayer(basin_layer)
+            map.removeLayer(streams_layer)
+            add_lulc();
+            add_basins();
+            add_streams();
+        } else if ($('#soilOption').is(':checked')) {
+            map.removeLayer(featureOverlaySubbasin);
+            map.removeLayer(featureOverlayStream);
+            map.removeLayer(lulc_layer);
+            map.removeLayer(basin_layer);
+            map.removeLayer(streams_layer);
+            add_soil();
+            add_basins();
+            add_streams();
+        } else if ($('noneOption').is(':checked')) {
+            map.removeLayer(featureOverlaySubbasin);
+            map.removeLayer(featureOverlayStream);
+            map.removeLayer(soil_layer);
+            map.removeLayer(lulc_layer);
+            map.removeLayer(basin_layer);
+            map.removeLayer(streams_layer);
+            add_basins();
+            add_streams();
+        }
 
     }
 
@@ -815,6 +1005,10 @@ $(function() {
         $(".form-group").change(function(){
             map.removeLayer(featureOverlaySubbasin);
             map.removeLayer(featureOverlayStream);
+        })
+
+        $(".radio").change(function(){
+            toggleLayers();
         })
 
         $(".nav-tabs").click(function(){

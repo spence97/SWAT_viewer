@@ -58,6 +58,28 @@
     <div class="input-group-addon">to</div>
     {% gizmo end_pick %}
   </div>
+  <br>
+  <h6>Supplementary Layers</h6>
+  <div class="btn-group btn-group-toggle" data-toggle="buttons">
+    <label class="btn btn-primary">
+      <input type="radio" class="radio" name="options" id="lulcOption" autocomplete="off"> Land Use/Land Cover
+    </label>
+    <label class="btn btn-primary">
+      <input type="radio" class="radio" name="options" id="soilOption" autocomplete="off"> Soil
+    </label>
+    <label class="btn btn-primary active">
+      <input type="radio" class="radio" name="options" id="noneOption" autocomplete="off" checked> None
+    </label>
+  </div>
+  <!--<form>-->
+    <!--<div class="radio">-->
+      <!--<label><input type="radio" id="lulcradio" checked>Land Use/Land Cover</label>-->
+    <!--</div>-->
+    <!--<div class="radio">-->
+      <!--<label><input type="radio" id="soilradio">Soil</label>-->
+    <!--</div>  -->
+  <!--</form>-->
+
 {% endblock %}
 
 {% block app_content %}

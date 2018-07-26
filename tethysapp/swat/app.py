@@ -35,6 +35,11 @@ class swat(TethysAppBase):
                 controller='swat.controllers.get_upstream'
             ),
             UrlMap(
+                name='raster_compute',
+                url='swat/raster_compute',
+                controller='swat.controllers.raster_compute'
+            ),
+            UrlMap(
                 name='time-series',
                 url='swat/timeseries',
                 controller='swat.controllers.timeseries'
