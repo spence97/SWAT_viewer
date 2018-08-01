@@ -9,7 +9,7 @@ from .app import swat as app
 from .forms import UploadWatershedForm
 from .upload_files import save_files
 from .config import data_path, temp_workspace
-from .clip import write_shp
+from .clip import clip_raster
 import os, json, random, string
 
 def home(request):
@@ -152,14 +152,19 @@ def raster_compute(request):
     Controller to clip soil and lulc rasters to upstream boundary and run raster calcs on clipped extents for basin statistics
     """
     upstream_json = json.loads(request.body)
+    bbox = upstream_json['bbox']
+    srs = 'EPSG:'
+    srs = srs + upstream_json['crs']['properties']['name'].split(':')[-1]
+    print(bbox)
+    print(srs)
     unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
     unique_path = os.path.join(temp_workspace, unique_id)
     os.makedirs(unique_path, 0777)
     with open(unique_path + '/upstream.json', 'w') as outfile:
         json.dump(upstream_json, outfile)
 
-    write_shp(unique_id)
-    json_dict = JsonResponse({'hello': 'hi'})
+    clip_raster(unique_id)
+    json_dict = JsonResponse({'id': unique_id, 'bbox': bbox, 'srs': srs})
     return json_dict
 
 def timeseries(request):

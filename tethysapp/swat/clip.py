@@ -1,26 +1,23 @@
-import os, json, fiona
-from shapely.geometry import shape
-from .config import temp_workspace
+import os, subprocess, requests
+from .config import data_path, temp_workspace, geoserver
 
 
-def write_shp(id):
-    json_path = os.path.join(temp_workspace, id)
-    print(json_path)
-    upstream_json = json.loads(open(json_path + '/upstream.json').read())
+def clip_raster(id):
+    input_json = os.path.join(temp_workspace, id, 'upstream.json')
+    input_tif = os.path.join(data_path, 'lower_mekong', 'lulc.tif')
+    output_tif = os.path.join(temp_workspace, id, 'upstream_lulc_' + id + '.tif')
 
-    coords = []
-    print(len(upstream_json['features']))
+    subprocess.call(
+        'gdalwarp --config GDALWARP_IGNORE_BAD_CUTLINE YES -cutline {0} -crop_to_cutline -dstalpha {1} {2}'.format(input_json, input_tif, output_tif),
+        shell=True)
 
-    for i in range(0, len(upstream_json['features'])):
-        geom = upstream_json['features'][i]['geometry']
-        result = shape(geom).buffer(0)
-        print(result)
-        coordinates = upstream_json['features'][i]['geometry']['coordinates'][0][0]
-        coords.append(coordinates)
+    storename = 'upstream_lulc_' + id
+    headers = {'Content-type': 'image/tiff', }
+    user = geoserver['user']
+    password = geoserver['password']
+    data = open(output_tif, 'rb').read()
 
-    new_json = {'type': 'Polygon', 'coordinates': coords}
+    request_url = '{0}workspaces/{1}/coveragestores/{2}/file.geotiff'.format(geoserver['rest_url'],
+                                                                             geoserver['workspace'], storename)
 
-
-    schema = {'geometry': 'Polygon', 'properties': {'fld_a': 'str:50'}}
-    with fiona.open(json_path + '/upstream.shp', 'w', 'ESRI Shapefile', schema) as layer:
-        layer.write({'geometry': new_json, 'properties': {'fld_a': 'test'}})
+    requests.put(request_url, verify=False, headers=headers, data=data, auth=(user, password))
