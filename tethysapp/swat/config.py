@@ -1,20 +1,12 @@
 import os
 
-# temp_workspace = os.path.join('/home/ubuntu/tethys_temp/swat/')
-#
-# data_path = os.path.join('/home/ubuntu/swat_data/')
+temp_workspace = os.path.join('/home/ubuntu/tethys_temp/swat/')
 
-# temp_workspace = os.path.join('/Users/Student/Documents/tethys_temp_files/swat')
-#
-# data_path = os.path.join('/Users/Student/Documents/tethysdev/swat_data')
+data_path = os.path.join('/home/ubuntu/swat_data/')
 
-temp_workspace = os.path.join('/home/ubuntu/Documents/tethys_temp/swat')
+nasaaccess_path = os.path.join('/home/ubuntu/nasaaccess_data')
 
-data_path = os.path.join('/home/ubuntu/Documents/swat_data')
-
-nasaaccess_path = os.path.join('/home/ubuntu/Documents/nasaaccess_data')
-
-nasaaccess_temp = os.path.join('/home/ubuntu/Documents/tethys_temp/nasaaccess')
+nasaaccess_temp = os.path.join('/home/ubuntu/tethys_temp/nasaaccess')
 
 watershed_xml_path = os.path.join('SWAT_viewer/tethysapp/swat/public/watershed_data/watershed_info.xml')
 
