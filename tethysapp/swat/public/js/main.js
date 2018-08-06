@@ -20,7 +20,9 @@ var LIBRARY_OBJECT = (function() {
         var current_layer,
         element,
         layers,
+        unique_id,
         modal_map,
+        nasaaccess_map,
         map,
         popup,
         $plotModal,
@@ -53,10 +55,14 @@ var LIBRARY_OBJECT = (function() {
         init_events,
         init_all,
         get_time_series,
+        lulc_compute,
         update_selectors,
         toggleLayers,
         init_map,
         init_modal_map,
+        init_nasaaccess_map,
+        nasaaccess,
+        validateQuery,
         downloadCsv,
         downloadAscii,
         getCookie
@@ -213,6 +219,48 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     };
 
+    init_nasaaccess_map = function() {
+//      Initialize all the initial map elements (projection, basemap, layers, center, zoom)
+        var projection = ol.proj.get('EPSG:4326');
+        var baseLayer = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: '5TC0yID7CYaqv3nVQLKe~xWVt4aXWMJq2Ed72cO4xsA~ApdeyQwHyH_btMjQS1NJ7OHKY8BK-W-EMQMrIavoQUMYXeZIQOUURnKGBOC7UCt4',
+                imagerySet: 'AerialWithLabels' // Options 'Aerial', 'AerialWithLabels', 'Road'
+            })
+        });
+
+        featureOverlayStream = new ol.layer.Vector({
+            source: new ol.source.Vector()
+        });
+
+        featureOverlaySubbasin = new ol.layer.Vector({
+            source: new ol.source.Vector()
+        });
+
+        var view = new ol.View({
+            center: [104.5, 17.5],
+            projection: projection,
+            zoom: 5.5
+        });
+
+        wms_source = new ol.source.ImageWMS();
+
+        wms_layer = new ol.layer.Image({
+            source: wms_source
+        });
+
+        layers = [baseLayer, featureOverlayStream, featureOverlaySubbasin];
+
+        nasaaccess_map = new ol.Map({
+            target: document.getElementById("nasaaccess_map"),
+            layers: layers,
+            view: view
+        });
+
+        map.crossOrigin = 'anonymous';
+
+    };
+
 
     get_time_series = function(watershed, start, end, parameters, streamID) {
 //      Function to pass selected dates, parameters, and streamID to the rch data parser python function and then plot the data
@@ -255,8 +303,15 @@ function ajax_update_database(ajax_url, ajax_data) {
                 if (!data.error) {
                     $loading.addClass('hidden');
                     $('#container').removeClass('hidden');
-                    $('#download_csv').removeClass('hidden');
-                    $('#download_ascii').removeClass('hidden');
+                    if ($("#watershed_tab").hasClass('active')) {
+                        $('#lulc_compute').removeClass('hidden');
+                        $('#download_csv').addClass('hidden');
+                        $('#download_ascii').addClass('hidden');
+                    } else if ($('#timeseries_tab').hasClass('active')) {
+                        $('#lulc_compute').addClass('hidden');
+                        $('#download_csv').removeClass('hidden');
+                        $('#download_ascii').removeClass('hidden');
+                    }
 
                 }
                     var plot_title
@@ -405,10 +460,13 @@ function ajax_update_database(ajax_url, ajax_data) {
             var start = $('#start_pick').val();
             var end = $('#end_pick').val();
             var parameter = $('#param_select option:selected').val();
-            map.removeLayer(featureOverlayStream);
-            map.removeLayer(featureOverlaySubbasin);
+
             modal_map.removeLayer(featureOverlayStream);
             modal_map.removeLayer(featureOverlaySubbasin);
+            modal_map.removeLayer(lulc_layer);
+
+            nasaaccess_map.removeLayer(featureOverlayStream);
+            nasaaccess_map.removeLayer(featureOverlaySubbasin);
 
 
             if (map.getTargetElement().style.cursor == "pointer") {
@@ -417,17 +475,20 @@ function ajax_update_database(ajax_url, ajax_data) {
                     map.addLayer(featureOverlayStream);
                     window.alert("Please be sure to select a parameter, start date, and end date before selecting a stream.")
                 } else {
+                    unique_id = Math.random().toString(36).substr(2,5);
+                    console.log(unique_id)
+                    sessionStorage.setItem('id', unique_id)
                     $('#container').addClass('hidden')
                     $('#download_csv').addClass('hidden');
                     $('#download_ascii').addClass('hidden');
+                    $('#lulc_compute').addClass('hidden');
+                    $('#pieContainer').addClass('hidden');
 
                     $loading = $('#view-file-loading');
                     $loading.removeClass('hidden');
                     if (!$('#error').hasClass('hidden')) {
                         $('#error').addClass('hidden')
                     }
-
-
 
                     var store = $('#watershed_select option:selected').val()
                     var reach_store_id = 'swat:' + store + '-reach'
@@ -465,7 +526,8 @@ function ajax_update_database(ajax_url, ajax_data) {
                                     url: '/apps/swat/get_upstream/',
                                     data: {
                                         'watershed': watershed,
-                                        'streamID': streamID
+                                        'streamID': streamID,
+                                        'id': sessionStorage.id
                                     },
                                     success: function(data) {
 
@@ -507,7 +569,7 @@ function ajax_update_database(ajax_url, ajax_data) {
                                         var color = '#ffffff';
                                         color = ol.color.asArray(color);
                                         color = color.slice();
-                                        color[3] = 0;
+                                        color[3] = .5;
 
                                         featureOverlaySubbasin = new ol.layer.Vector({
                                             source: subbasinVectorSource,
@@ -521,47 +583,42 @@ function ajax_update_database(ajax_url, ajax_data) {
                                                 })
                                             })
                                         });
-                                        var view = new ol.View({
-                                            center: clickCoord,
-                                            projection: 'EPSG:4326',
-                                            zoom: 8.4
-                                        });
-
-                                        modal_map.setView(view)
-                                        map.addLayer(featureOverlaySubbasin);
-                                        map.addLayer(featureOverlayStream);
 
 
                                         $.getJSON(basin_url, function(data) {
                                             console.log(data);
                                             var upstreamJson = data;
+                                            upstreamJson['uniqueId'] = sessionStorage.id
                                             $.ajax({
                                                 type: 'POST',
-                                                url: "/apps/swat/raster_compute/",
+                                                url: "/apps/swat/save_json/",
                                                 data: JSON.stringify(upstreamJson),
                                                 success: function(result){
-                                                    //      add the streams for the selected watershed
-                                                    var id = result.id
-
-                                                    var store = 'upstream_lulc_' + id
-                                                    var store_id = 'swat:' + store
-                                                    console.log(store_id)
-
-                                                    //     Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
-                                                    wms_source = new ol.source.ImageWMS({
-                                                        url: geoserver_url,
-                                                        params: {'LAYERS':store_id, 'STYLES':'lulc'},
-                                                        serverType: 'geoserver',
-                                                        crossOrigin: 'Anonymous'
-                                                    });
-
-                                                    upstream_lulc = new ol.layer.Image({
-                                                        source: wms_source
-                                                    });
+                                                    //      add the clipped lulc raster for the selected watershed
+//                                                    var id = result.id
+//
+//                                                    var store = 'upstream_lulc_' + id
+//                                                    var store_id = 'swat:' + store
+//                                                    console.log(store_id)
+//
+//                                                    //     Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
+//                                                    wms_source = new ol.source.ImageWMS({
+//                                                        url: geoserver_url,
+//                                                        params: {'LAYERS':store_id, 'STYLES':'lulc'},
+//                                                        serverType: 'geoserver',
+//                                                        crossOrigin: 'Anonymous'
+//                                                    });
+//
+//                                                    upstream_lulc = new ol.layer.Image({
+//                                                        source: wms_source
+//                                                    });
 
                                                     var bbox = result.bbox
                                                     var srs = result.srs
                                                     var new_extent = ol.proj.transformExtent(bbox, srs, 'EPSG:4326');
+                                                    console.log(new_extent)
+                                                    sessionStorage.setItem('extent', new_extent)
+                                                    console.log(sessionStorage.extent)
                                                     var center = ol.extent.getCenter(new_extent)
                                                     var view = new ol.View({
                                                         center: center,
@@ -570,13 +627,20 @@ function ajax_update_database(ajax_url, ajax_data) {
                                                         zoom: 8
                                                     });
 
-                                                    modal_map.setView(view)
 
-                                                    //      add subbasins to the map
-                                                    modal_map.addLayer(upstream_lulc);
+                                                    modal_map.setView(view)
+                                                    modal_map.getView().fit(new_extent, modal_map.getSize());
+                                                    nasaaccess_map.setView(view)
+
+
                                                     modal_map.addLayer(featureOverlaySubbasin);
                                                     modal_map.addLayer(featureOverlayStream);
                                                     modal_map.updateSize();
+
+                                                    nasaaccess_map.addLayer(featureOverlaySubbasin);
+                                                    nasaaccess_map.updateSize();
+                                                    nasaaccess_map.getView().fit(new_extent, nasaaccess_map.getSize());
+
                                                 }
 
                                             })
@@ -803,8 +867,6 @@ function ajax_update_database(ajax_url, ajax_data) {
     }
 
 
-
-
 //  When the Monthly/Daily toggle is clicked, update the datepickers to show only available options
     function loadXMLDoc() {
         var request = new XMLHttpRequest();
@@ -871,8 +933,6 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     toggleLayers = function() {
         if ($('#lulcOption').is(':checked')) {
-            map.removeLayer(featureOverlaySubbasin)
-            map.removeLayer(featureOverlayStream)
             map.removeLayer(soil_layer)
             map.removeLayer(basin_layer)
             map.removeLayer(streams_layer)
@@ -880,8 +940,6 @@ function ajax_update_database(ajax_url, ajax_data) {
             add_basins();
             add_streams();
         } else if ($('#soilOption').is(':checked')) {
-            map.removeLayer(featureOverlaySubbasin);
-            map.removeLayer(featureOverlayStream);
             map.removeLayer(lulc_layer);
             map.removeLayer(basin_layer);
             map.removeLayer(streams_layer);
@@ -889,8 +947,6 @@ function ajax_update_database(ajax_url, ajax_data) {
             add_basins();
             add_streams();
         } else if ($('#noneOption').is(':checked')) {
-            map.removeLayer(featureOverlaySubbasin);
-            map.removeLayer(featureOverlayStream);
             map.removeLayer(soil_layer);
             map.removeLayer(lulc_layer);
             map.removeLayer(basin_layer);
@@ -901,9 +957,179 @@ function ajax_update_database(ajax_url, ajax_data) {
 
     }
 
+    lulc_compute = function(){
+        var watershed = $('#watershed_select option:selected').val()
+        var id = sessionStorage.id
+
+        $.ajax({
+            type: 'POST',
+            url: "/apps/swat/lulc_compute/",
+            data: {
+                'id': id,
+                'watershed': watershed
+                },
+            success: function(result){
+                $('#view-pie-loading').addClass('hidden')
+//            plot coverage percentages in pie chart
+                var classes = result.classes
+                console.log(classes)
+                var classValues = result.classValues
+                var classColors = result.classColors
+                var subclassValues = result.subclassValues
+                var subclassColors = result.subclassColors
+                var classData = []
+                var subclassData = []
+
+                for (var key in classValues){
+                    classData.push({'name': key, 'y': classValues[key], 'color': classColors[key], 'drilldown': key})
+                }
+                console.log(classData)
+
+                var data = []
+                for (var key in classValues){
+                    for (var newKey in classes){
+                        console.log(classes[newKey], key)
+                        if (classes[newKey] === key){
+                            data.push({'name': newKey, 'y': subclassValues[newKey], 'color': subclassColors[newKey]})
+                        }
+                    }
+                    subclassData.push({'name': key, 'id': key, 'data': data})
+                    data = []
+                }
+                console.log(subclassData)
+
+                $('#pieContainer').removeClass('hidden')
+                Highcharts.chart('pieContainer', {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie'
+                    },
+                    title: {
+                        text: 'Land Cover Distribution',
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: false,
+                                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                style: {
+                                    color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                }
+                            },
+                            showInLegend: true
+                        }
+                    },
+                    series: [{
+                        name: 'Coverage',
+                        colorByPoint: true,
+                        data: classData
+                    }],
+                    'drilldown': {
+                        drillUpButton: {
+                            position: {
+                                verticalAlign: 'top'
+                            }
+                        },
+                        'series': subclassData
+                    }
+                });
+//            add the clipped lulc raster for the selected watershed
+                var store = 'upstream_lulc_' + id
+                var store_id = 'swat:' + store
+
+                //     Set the wms source to the url, workspace, and store for the subbasins of the selected watershed
+                wms_source = new ol.source.ImageWMS({
+                    url: geoserver_url,
+                    params: {'LAYERS':store_id, 'STYLES':'lulc'},
+                    serverType: 'geoserver',
+                    crossOrigin: 'Anonymous'
+                });
+
+                upstream_lulc = new ol.layer.Image({
+                    source: wms_source
+                });
+
+
+                modal_map.removeLayer(featureOverlaySubbasin);
+                modal_map.removeLayer(featureOverlayStream);
+                modal_map.addLayer(upstream_lulc);
+                modal_map.addLayer(featureOverlaySubbasin);
+                modal_map.addLayer(featureOverlayStream);
+
+
+                var color = '#ffffff';
+                color = ol.color.asArray(color);
+                color = color.slice();
+                color[3] = 0;
+
+                var hollow_style = new ol.style.Style({stroke: new ol.style.Stroke({
+                                                                        color: '#cccccc',
+                                                                        width: 2
+                                                                    }),
+                                                        fill: new ol.style.Fill({
+                                                                        color: color
+                                                                  })
+                                        })
+                featureOverlaySubbasin.setStyle(hollow_style)
+            }
+
+        })
+    }
+
+    nasaaccess = function() {
+//      Get the values from the nasaaccess form and pass them to the run_nasaaccess python controller
+        var start = $('#na_start_pick').val();
+        var end = $('#na_end_pick').val();
+        var watershed = $('#watershed_select option:selected').val()
+        var functions = [];
+        $('.chk:checked').each(function() {
+             functions.push( $( this ).val());
+        });
+        var email = $('#id_email').val();
+        var id = sessionStorage.id
+	    console.log(start, end, functions, email)
+        $.ajax({
+            type: 'POST',
+            url: "/apps/swat/run_nasaaccess/",
+            data: {
+                'watershed': watershed,
+                'startDate': start,
+                'endDate': end,
+                'functions': functions,
+                'uniqueId': id,
+                'email': email
+            },
+        }).done(function() {
+            console.log('NASAaccess functions are running')
+        });
+    }
+
+    validateQuery = function() {
+        var start = $('#start_pick').val()
+        var end = $('#end_pick').val()
+        var functions = [];
+        $('.chk:checked').each(function() {
+             functions.push( $( this ).val());
+        });
+        console.log(start, end, functions)
+        if (start === undefined || end === undefined || functions.length == 0) {
+            alert('Please be sure you have selected start and end dates, and at least 1 function')
+        } else {
+            $("#cont-modal").modal('show');
+        }
+    }
+
     init_all = function(){
         init_map();
         init_modal_map();
+        init_nasaaccess_map();
         init_events();
         add_basins();
         add_streams();
@@ -958,10 +1184,41 @@ $(function() {
             setTimeout(updatemap, 200);
             function updatemap() {
                 if ($("#watershed_tab").hasClass('active')) {
+                    console.log(sessionStorage.extent.split(','))
                     modal_map.updateSize();
+                    modal_map.getView().fit(sessionStorage.extent.split(','), map.getSize());
+                    $('#lulc_compute').removeClass('hidden');
+                    $('#download_csv').addClass('hidden');
+                    $('#download_ascii').addClass('hidden');
+                } else if ($('#timeseries_tab').hasClass('active')) {
+                    $('#lulc_compute').addClass('hidden');
+                    $('#download_csv').removeClass('hidden');
+                    $('#download_ascii').removeClass('hidden');
+                } else if ($('#nasaaccess_tab').hasClass('active')) {
+                    console.log(sessionStorage.extent.split(','))
+                    nasaaccess_map.updateSize();
+                    nasaaccess_map.getView().fit(sessionStorage.extent.split(','), map.getSize());
+                    $('#lulc_compute').addClass('hidden');
+                    $('#download_csv').addClass('hidden');
+                    $('#download_ascii').addClass('hidden');
                 }
             }
         })
+
+        $("#lulc_comp").click(function(){
+            lulc_compute();
+            $('#view-pie-loading').removeClass('hidden')
+        })
+
+        $('#nasaaccess').click(function() {
+            validateQuery();
+
+        });
+
+        $('#submit_email').click(function() {
+            $("#cont-modal").modal('hide');
+            nasaaccess()
+        });
 
 })
 

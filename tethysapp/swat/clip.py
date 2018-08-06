@@ -2,16 +2,16 @@ import os, subprocess, requests
 from .config import data_path, temp_workspace, geoserver
 
 
-def clip_raster(id):
+def clip_raster(id, raster_type):
     input_json = os.path.join(temp_workspace, id, 'upstream.json')
-    input_tif = os.path.join(data_path, 'lower_mekong', 'lulc.tif')
-    output_tif = os.path.join(temp_workspace, id, 'upstream_lulc_' + id + '.tif')
+    input_tif = os.path.join(data_path, 'lower_mekong', raster_type + '.tif')
+    output_tif = os.path.join(temp_workspace, id, 'upstream_'+ raster_type + '_' + id + '.tif')
 
     subprocess.call(
         'gdalwarp --config GDALWARP_IGNORE_BAD_CUTLINE YES -cutline {0} -crop_to_cutline -dstalpha {1} {2}'.format(input_json, input_tif, output_tif),
         shell=True)
 
-    storename = 'upstream_lulc_' + id
+    storename = 'upstream_' + raster_type + '_' + id
     headers = {'Content-type': 'image/tiff', }
     user = geoserver['user']
     password = geoserver['password']

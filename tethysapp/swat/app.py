@@ -32,17 +32,27 @@ class swat(TethysAppBase):
             UrlMap(
                 name='get-upstream',
                 url='swat/get_upstream',
-                controller='swat.controllers.get_upstream'
+                controller='swat.ajax_controllers.get_upstream'
             ),
             UrlMap(
-                name='raster_compute',
-                url='swat/raster_compute',
-                controller='swat.controllers.raster_compute'
+                name='save_json',
+                url='swat/save_json',
+                controller='swat.ajax_controllers.save_json'
+            ),
+            UrlMap(
+                name='run_nasaaccess',
+                url='swat/run_nasaaccess',
+                controller='swat.ajax_controllers.run_nasaaccess'
+            ),
+            UrlMap(
+                name='lulc_compute',
+                url='swat/lulc_compute',
+                controller='swat.ajax_controllers.lulc_compute'
             ),
             UrlMap(
                 name='time-series',
                 url='swat/timeseries',
-                controller='swat.controllers.timeseries'
+                controller='swat.ajax_controllers.timeseries'
             ),
             UrlMap(
                 name='add_watershed',
@@ -52,17 +62,17 @@ class swat(TethysAppBase):
             UrlMap(
                 name='upload_files',
                 url='swat/upload',
-                controller='swat.controllers.upload_files'
+                controller='swat.ajax_controllers.upload_files'
             ),
             UrlMap(
                 name='download_csv',
                 url='swat/download_csv',
-                controller='swat.controllers.download_csv'
+                controller='swat.ajax_controllers.download_csv'
             ),
             UrlMap(
                 name='download_ascii',
                 url='swat/download_ascii',
-                controller='swat.controllers.download_ascii'
+                controller='swat.ajax_controllers.download_ascii'
             )
 
         )

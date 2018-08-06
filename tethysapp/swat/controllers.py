@@ -1,16 +1,9 @@
 from django.shortcuts import *
 from tethys_sdk.gizmos import *
-from django.http import JsonResponse, HttpResponseRedirect
-from django.core.files import File
-from .rch_data_controller import extract_monthly_rch, extract_daily_rch
-from .get_upstream import get_upstreams
-from .model import write_csv, write_ascii
-from .app import swat as app
 from .forms import UploadWatershedForm
-from .upload_files import save_files
-from .config import data_path, temp_workspace
-from .clip import clip_raster
-import os, json, random, string
+from .config import data_path
+from datetime import datetime
+import os
 
 def home(request):
     """
@@ -42,6 +35,12 @@ def home(request):
     startView = 'decade'
     minView = 'months'
 
+    na_start = 'Jan 01, 2000'
+    na_end = datetime.now().strftime("%b %d, %Y")
+    na_format = 'M d, yyyy'
+    na_startView = 'decade'
+    na_minView = 'days'
+
     watershed_select = SelectInput(name='watershed_select',
                                    multiple=False,
                                    original=False,
@@ -68,6 +67,27 @@ def home(request):
                           start_date=start,
                           end_date=end,
                           start_view=startView,
+                          today_button=False,
+                          initial='End Date'
+                          )
+
+    na_start_pick = DatePicker(name='na_start_pick',
+                            autoclose=True,
+                            format=na_format,
+                            min_view_mode=na_minView,
+                            start_date=na_start,
+                            end_date=na_end,
+                            start_view=na_startView,
+                            today_button=False,
+                            initial='Start Date')
+
+    na_end_pick = DatePicker(name='na_end_pick',
+                          autoclose=True,
+                          format=na_format,
+                          min_view_mode=na_minView,
+                          start_date=na_start,
+                          end_date=na_end,
+                          start_view=na_startView,
                           today_button=False,
                           initial='End Date'
                           )
@@ -128,6 +148,8 @@ def home(request):
     context = {
         'start_pick': start_pick,
         'end_pick': end_pick,
+        'na_start_pick': na_start_pick,
+        'na_end_pick': na_end_pick,
         'param_select': param_select,
         'watershed_select': watershed_select,
         'watershedform': watershedform
@@ -135,67 +157,6 @@ def home(request):
 
     return render(request, 'swat/home.html', context)
 
-def get_upstream(request):
-    """
-    Controller to get list of all upstream reach ids and pass it to front end
-    """
-    watershed = request.POST.get('watershed')
-    streamID = request.POST.get('streamID')
-
-    upstreams = get_upstreams(watershed, streamID)
-
-    json_dict = JsonResponse({'watershed': watershed, 'streamID': streamID, 'upstreams': upstreams})
-    return json_dict
-
-def raster_compute(request):
-    """
-    Controller to clip soil and lulc rasters to upstream boundary and run raster calcs on clipped extents for basin statistics
-    """
-    upstream_json = json.loads(request.body)
-    bbox = upstream_json['bbox']
-    srs = 'EPSG:'
-    srs = srs + upstream_json['crs']['properties']['name'].split(':')[-1]
-    print(bbox)
-    print(srs)
-    unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    unique_path = os.path.join(temp_workspace, unique_id)
-    os.makedirs(unique_path, 0777)
-    with open(unique_path + '/upstream.json', 'w') as outfile:
-        json.dump(upstream_json, outfile)
-
-    clip_raster(unique_id)
-    json_dict = JsonResponse({'id': unique_id, 'bbox': bbox, 'srs': srs})
-    return json_dict
-
-def timeseries(request):
-    """
-    Controller for the time-series plot.
-    """
-    # Get values passed from the timeseries function in main.js
-    watershed = request.POST.get('watershed')
-    start = request.POST.get('startDate')
-    end = request.POST.get(str('endDate'))
-    parameters = request.POST.getlist('parameters[]')
-    streamID = request.POST.get('streamID')
-    monthOrDay = request.POST.get('monthOrDay')
-
-    # Call the correct rch data parser function based on whether the monthly or daily toggle was selected
-    if monthOrDay == 'Monthly':
-        timeseries_dict = extract_monthly_rch(watershed, start, end, parameters, streamID)
-    else:
-        timeseries_dict = extract_daily_rch(watershed, start, end, parameters, streamID)
-
-
-    # # Call functions to create csv and ascii files for the selected timeseries
-    dates = timeseries_dict['Dates']
-    values = timeseries_dict['Values']
-    timestep = timeseries_dict['Timestep']
-    write_csv(watershed, streamID, parameters, dates, values, timestep)
-    write_ascii(watershed, streamID, parameters, dates, values, timestep)
-
-    # Return the json object back to main.js for timeseries plotting
-    json_dict = JsonResponse(timeseries_dict)
-    return (json_dict)
 
 def add_watershed(request):
     """
@@ -214,51 +175,6 @@ def add_watershed(request):
     return render(request, 'swat/add_watershed.html', context)
 
 
-def upload_files(request):
-
-    """
-    Controller to upload new temp and .rch data files to app server and publish to geoserver
-    """
-
-
-    if request.method == 'POST':
-        form = UploadWatershedForm(request.POST, request.FILES)
-        watershed_name = request.POST['watershed_name']
-        watershed_name = watershed_name.replace(' ', '_').lower()
-        new_dir = os.path.join(data_path, watershed_name)
-        if form.is_valid():
-            form.save()
-            os.makedirs(new_dir)
-            save_files(watershed_name)
-
-        return HttpResponseRedirect('../home/')
-    else:
-        return HttpResponseRedirect('../home/')
-
-def download_csv(request):
-    """
-    Controller to download csv file
-    """
-
-    path_to_file = os.path.join(temp_workspace, 'swat_data.csv')
-    f = open(path_to_file, 'r')
-    myfile = File(f)
-
-    response = HttpResponse(myfile, content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=swat_data.csv'
-    return response
-
-def download_ascii(request):
-    """
-    Controller to download ascii file
-    """
-
-    path_to_file = os.path.join(temp_workspace,'swat_data.txt')
-    f = open(path_to_file, 'r')
-    myfile = File(f)
-    response = HttpResponse(myfile, content_type='text/plain')
-    response['Content-Disposition'] = 'attachment; filename=swat_data.txt'
-    return response
 
 
 
